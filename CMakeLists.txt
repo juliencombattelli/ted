@@ -17,3 +17,5 @@ add_executable(ted
     src/platform/${PLATFORM_DIR}/term.cpp
 )
 target_include_directories(ted PRIVATE src)
+
+add_executable(kilo examples/kilo.c)
