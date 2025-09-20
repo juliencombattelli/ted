@@ -1,0 +1,3 @@
+[submodule "external/nob.h"]
+	path = external/nob.h
+	url = http://github.com/tsoding/nob.h

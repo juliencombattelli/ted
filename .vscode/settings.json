@@ -1,0 +1,22 @@
+{
+    "files.associations": {
+        ".clang-format": "yaml",
+        ".clang-tidy": "yaml",
+        ".clangd": "yaml",
+        "Doxyfile": "makefile",
+    },
+    "[c]": {
+        "editor.formatOnSave": true,
+    },
+    "[cpp]": {
+        "editor.formatOnSave": true,
+    },
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "cSpell.words": [
+        "Combattelli",
+        "NOLINT",
+        "NOLINTBEGIN",
+        "NOLINTEND",
+        "NOLINTNEXTLINE",
+    ],
+}
