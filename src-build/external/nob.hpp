@@ -29,6 +29,8 @@ SOFTWARE.
 #include <cstdint>
 #include <cstdio>
 #include <cstring>
+#include <list>
+#include <map>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -557,6 +559,105 @@ NOB_DEF bool cmd_run(const Cmd& cmd);
 NOB_DEF std::string into_object_file(
     const std::string& input_file,
     const std::string& build_dir);
+
+struct Target {
+    enum class Type {
+        Source,
+        Object,
+        Executable,
+        StaticLibrary,
+        DynamicLibrary,
+    };
+
+    using Name = std::string;
+
+    Type type;
+    Name name;
+    std::vector<Target*> dependencies;
+    std::vector<std::string> compile_options;
+    std::vector<std::string> link_options;
+};
+
+struct Context {
+    std::string build_directory;
+    // All targets known to the build system
+    std::map<Target::Name, Target> targets;
+    // Target list that will be run sequentially
+    // TODO implement a tree+thread_pool instead
+    std::list<Target*> seq_leaf_targets;
+
+    static void assert_unique(bool condition, const std::string& name)
+    {
+        if (!condition) {
+            nob::logf_error(
+                "Target with name `%s` already exists",
+                name.c_str());
+            // TODO should we propagate the error to the caller?
+            std::exit(1);
+        }
+    }
+
+    explicit Context(const std::string& build_dir)
+        : build_directory(build_dir)
+    {
+    }
+
+    // Should not be used directly
+    Target* add_source(const std::string& path)
+    {
+        // canonize the name using realpath or similar
+        nob::logf_error("Target with name `%s` is unknown", name.c_str());
+        return nullptr;
+    }
+
+    // Should not be used directly
+    Target* find_dependency(const Target::Name& name)
+    {
+        auto it = targets.find(name);
+        if (it != targets.end()) {
+            return &it->second;
+        }
+        return add_source(name);
+    }
+
+    Target* add_object(const std::string& input)
+    {
+        return nullptr;
+    }
+
+    Target* add_executable(
+        const Target::Name& name,
+        const std::vector<Target::Name>& dependencies)
+    {
+        std::vector<Target*> required_targets;
+        for (const auto& dep : dependencies) {
+            required_targets.push_back(find_dependency(dep));
+        }
+        auto [it, inserted] = targets.insert({
+            name,
+            Target {
+                Target::Type::Executable,
+                name,
+                required_targets,
+            },
+        });
+        assert_unique(inserted, name);
+        return &it->second;
+    }
+
+    Target* add_static_library(
+        const Target::Name& name,
+        const std::vector<Target::Name>& dependencies);
+
+    Target* add_dynamic_library(
+        const Target::Name& name,
+        const std::vector<Target::Name>& dependencies);
+
+    Target* add_generated_file(
+        const Target::Name& name,
+        const std::vector<Target::Name>& dependencies,
+        CommandLine cmd);
+};
 
 // Generate a compilation database from given command groups into a file
 // See https://clang.llvm.org/docs/JSONCompilationDatabase.html
