@@ -1140,17 +1140,18 @@ NOB_DEF bool compdb_dump(
     {
         compdb_start(compdb);
         {
-            // const size_t cmd_group_count = cmd_goups.size();
-            // for (auto& cmd_group : cmd_goups) {
-            //     const size_t cmds_count = cmd_group.size();
-            //     for (auto& cmd : cmd_group) {
-            //         compdb_add_entry(&compdb, cmd);
-            //         if (group < cmd_group_count - 1
-            //             || i < cmd_group->count - 1) {
-            //             compdb_entry_continue(compdb);
-            //         }
-            //     }
-            // }
+            const size_t cmd_group_count = cmd_groups.size();
+            for (int group = 0; group < cmd_group_count; group++) {
+                const auto& cmd_group = cmd_groups[group];
+                const size_t cmds_count = cmd_group.size();
+                for (int i = 0; i < cmds_count; i++) {
+                    const auto& cmd = cmd_group[i];
+                    compdb_add_entry(compdb, cmd);
+                    if (group < cmd_group_count - 1 || i < cmds_count - 1) {
+                        compdb_entry_continue(compdb);
+                    }
+                }
+            }
         }
         compdb_end(compdb);
     }
