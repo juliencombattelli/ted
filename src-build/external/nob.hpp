@@ -518,8 +518,6 @@ using Outputs = std::vector<std::string>;
 using CommandLine = std::vector<std::string>;
 
 // A command to process inputs into outputs using a command line.
-// Keeps track of the inputs and outputs separately from the command line t
-// ease the generation of a compilation database.
 struct Cmd {
     std::string name;
     Inputs inputs;
@@ -580,7 +578,8 @@ NOB_DEF bool compdb_dump(
 namespace NOB_NAMESPACE {
 
 // Shift an array by 1 element, decreasing the element count, and return it.
-// Similar to bash shift, it is especially useful to handle program arguments.
+// Similar to bash shift, it is especially useful to handle program
+// arguments.
 template<typename T, typename SizeType = size_t>
 T& shift(SizeType& count, T*& values)
 {
