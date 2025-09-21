@@ -14,7 +14,10 @@ endif()
 
 add_executable(ted
     src/main.cpp
-    src/platform/${PLATFORM_DIR}/term.cpp
+    src/ted/os.cpp
+    src/ted/term.cpp
+    src/ted/platform/${PLATFORM_DIR}/os.cpp
+    src/ted/platform/${PLATFORM_DIR}/term.cpp
 )
 target_include_directories(ted PRIVATE src)
 
