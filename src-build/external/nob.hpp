@@ -555,8 +555,8 @@ NOB_DEF Proc cmd_start_process(const Cmd& cmd);
 NOB_DEF bool cmd_run(const Cmd& cmd);
 
 NOB_DEF std::string into_object_file(
-    std::string_view input_file,
-    std::string_view build_dir);
+    const std::string& input_file,
+    const std::string& build_dir);
 
 // Generate a compilation database from given command groups into a file
 // See https://clang.llvm.org/docs/JSONCompilationDatabase.html
@@ -1077,8 +1077,8 @@ NOB_DEF bool cmd_run(const CommandLine& command_line)
 }
 
 NOB_DEF std::string into_object_file(
-    std::string_view input_file,
-    std::string_view build_dir)
+    const std::string& input_file,
+    const std::string& build_dir)
 {
     std::string output;
     output += build_dir;
