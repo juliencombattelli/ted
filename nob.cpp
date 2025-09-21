@@ -59,7 +59,7 @@ nob::Cmd build_nob_cmd(const char* input)
 {
     std::string output = nob::into_object_file(input, BUILD_DIR);
     nob::Cmd cmd;
-    nob::cmd_append_compiler(cmd);
+    nob::cmd_append_cxx_compiler(cmd);
     nob::cmd_append_output(cmd, output);
     nob::cmd_append_input(cmd, input);
     return cmd;
@@ -74,7 +74,7 @@ nob::Cmd build_cmd(const char* input)
         = nob::str_printf("\e[32m" LOG_COMPILING "%s\e[0m", output.c_str());
 #ifdef NOB_COMPILER_MSVC
 #else
-    nob::cmd_append_compiler(cmd);
+    nob::cmd_append_cxx_compiler(cmd);
     nob::cmd_append(cmd, "-Wall");
     nob::cmd_append(cmd, "-Wextra");
     nob::cmd_append(cmd, "-pedantic");
@@ -91,7 +91,7 @@ nob::Cmd link_cmd(const char* output, const nob::CmdGroup& build_cmd_group)
 {
     nob::Cmd cmd;
     cmd.name = nob::str_printf("\e[1;32m" LOG_LINKING "%s\e[0m", output);
-    nob::cmd_append_compiler(cmd);
+    nob::cmd_append_cxx_compiler(cmd);
     nob::cmd_append_output(cmd, output);
     for (const nob::Cmd& build_cmd : build_cmd_group) {
         // Take object files to link them

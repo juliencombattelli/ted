@@ -534,9 +534,9 @@ NOB_DEF void cmd_append(Cmd& cmd, const std::string& arg);
 
 NOB_DEF void cmd_append_many(Cmd& cmd, const std::vector<std::string>& args);
 
-NOB_DEF void cmd_append_compiler(Cmd& cmd);
+NOB_DEF void cmd_append_cxx_compiler(Cmd& cmd);
 
-NOB_DEF void cmd_append_default_flags(Cmd& cmd);
+NOB_DEF void cmd_append_cxx_default_flags(Cmd& cmd);
 
 NOB_DEF void cmd_append_input(Cmd& cmd, const std::string& input);
 
@@ -984,12 +984,12 @@ NOB_DEF void cmd_append_many(Cmd& cmd, const std::vector<std::string>& args)
     }
 }
 
-NOB_DEF void cmd_append_compiler(Cmd& cmd)
+NOB_DEF void cmd_append_cxx_compiler(Cmd& cmd)
 {
     cmd_append(cmd, NOB_CXX);
 }
 
-NOB_DEF void cmd_append_default_flags(Cmd& cmd)
+NOB_DEF void cmd_append_cxx_default_flags(Cmd& cmd)
 {
     cmd_append_many(cmd, { NOB_CXX_DEFAULT_FLAGS });
 }
