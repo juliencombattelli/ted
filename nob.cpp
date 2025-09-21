@@ -71,7 +71,7 @@ nob::Cmd build_cmd(const char* input)
     create_output_file_dir_recursively(output);
     nob::Cmd cmd;
     cmd.name
-        = nob::str_format("\e[32m" LOG_COMPILING "%s\e[0m", output.c_str());
+        = nob::str_printf("\e[32m" LOG_COMPILING "%s\e[0m", output.c_str());
 #ifdef NOB_COMPILER_MSVC
 #else
     nob::cmd_append_compiler(cmd);
@@ -90,7 +90,7 @@ nob::Cmd build_cmd(const char* input)
 nob::Cmd link_cmd(const char* output, const nob::CmdGroup& build_cmd_group)
 {
     nob::Cmd cmd;
-    cmd.name = nob::str_format("\e[1;32m" LOG_LINKING "%s\e[0m", output);
+    cmd.name = nob::str_printf("\e[1;32m" LOG_LINKING "%s\e[0m", output);
     nob::cmd_append_compiler(cmd);
     nob::cmd_append_output(cmd, output);
     for (const nob::Cmd& build_cmd : build_cmd_group) {

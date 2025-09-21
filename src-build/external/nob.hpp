@@ -877,7 +877,7 @@ NOB_DEF void logf_error(Fmt fmt, ...)
     va_end(args);
 }
 
-NOB_DEF std::string str_format(const char* fmt, ...)
+NOB_DEF std::string str_printf(const char* fmt, ...)
 {
     va_list args;
 
@@ -1106,7 +1106,7 @@ static void compdb_add_entry(CompDb& compdb, const Cmd& cmd)
     }
     auto cwd = std::filesystem::current_path();
     std::string command_str = cmd_render(cmd.command_line);
-    compdb += str_format(
+    compdb += str_printf(
         "\n"
         "  {\n"
         "    \"directory\": \"%s\",\n"
