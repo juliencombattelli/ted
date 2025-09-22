@@ -1,6 +1,8 @@
 #ifndef TED_TERM_HPP_
 #define TED_TERM_HPP_
 
+#include <ted/key.hpp>
+
 #include <cstdint>
 #include <cstdlib>
 
@@ -31,14 +33,14 @@ enum class ClearMode : uint8_t {
 void clear(ClearMode mode);
 void clear();
 
-[[nodiscard]]
+[[nodiscard, deprecated]]
 constexpr char key_ctrl(char key)
 {
     return key & 0x1f;
 }
 
 [[nodiscard]]
-char read_key();
+Key::Code read_key();
 
 void write_screen_buffer();
 

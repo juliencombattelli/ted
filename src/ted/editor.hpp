@@ -1,16 +1,18 @@
 #ifndef TED_EDITOR_HPP_
 #define TED_EDITOR_HPP_
 
+#include <ted/key.hpp>
+
 #include <array>
+#include <cstdint>
 #include <cstdlib>
 #include <string>
+#include <utility>
 
 namespace ted::editor {
 
-constexpr size_t MaxKeyCount = 256;
-
 using KeyHandler = void(void* userdata);
-using KeyMap = std::array<KeyHandler*, MaxKeyCount>;
+using KeyMap = std::array<KeyHandler*, std::to_underlying(Key::Count)>;
 
 struct State {
     std::string screen_buffer;

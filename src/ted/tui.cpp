@@ -1,4 +1,5 @@
 #include <ted/editor.hpp>
+#include <ted/key.hpp>
 #include <ted/os.hpp>
 #include <ted/term.hpp>
 #include <ted/tui.hpp>
@@ -10,24 +11,27 @@
 
 namespace ted::tui {
 
-static void process_key(char c)
+static void process_key(Key::Code keycode)
 {
-    auto key_handler = editor::state.keymap[c];
+    auto key_handler = editor::state.keymap[keycode];
     if (key_handler != nullptr) {
         // TODO handle userdata
         key_handler(nullptr);
     } else {
-        editor::screen_buffer_append(c);
+        // TODO if visible char only
+        editor::screen_buffer_append(keycode);
     }
 }
 
 static void load_default_tui_keymap()
 {
-    // TODO replace with arrow keys
-    editor::state.keymap['z'] = [](void*) { editor::cursor_up(); };
-    editor::state.keymap['s'] = [](void*) { editor::cursor_down(); };
-    editor::state.keymap['d'] = [](void*) { editor::cursor_right(); };
-    editor::state.keymap['q'] = [](void*) { editor::cursor_left(); };
+    editor::state.keymap[Key::Code::Up] = [](void*) { editor::cursor_up(); };
+    editor::state.keymap[Key::Code::Down]
+        = [](void*) { editor::cursor_down(); };
+    editor::state.keymap[Key::Code::Right]
+        = [](void*) { editor::cursor_right(); };
+    editor::state.keymap[Key::Code::Left]
+        = [](void*) { editor::cursor_left(); };
 
     editor::state.keymap['\r']
         = [](void*) { editor::screen_buffer_append("\r\n"); };
@@ -77,8 +81,8 @@ void start()
     init();
     while (true) {
         refresh_screen();
-        char c = term::read_key();
-        process_key(c);
+        Key::Code keycode = term::read_key();
+        process_key(keycode);
     }
 }
 

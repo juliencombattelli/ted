@@ -35,6 +35,8 @@ static void enable_raw_mode()
     raw.c_oflag &= ~(OPOST);
     raw.c_cflag |= (CS8);
     raw.c_lflag &= ~(IEXTEN | ECHO | ICANON | ISIG);
+    raw.c_cc[VMIN] = 0;
+    raw.c_cc[VTIME] = 1;
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) != 0) {
         os::exit_err("tcsetattr() failed");
     }
@@ -56,16 +58,45 @@ bool get_size(size_t& rows, size_t& columns)
     return true;
 }
 
-char read_key()
+[[nodiscard]]
+static Key::Code read_escape_sequence()
+{
+    char seq[3];
+
+    if (::read(STDIN_FILENO, &seq[0], 1) != 1) {
+        return Key::Code { '\e' };
+    }
+    if (::read(STDIN_FILENO, &seq[1], 1) != 1) {
+        return Key::Code { '\e' };
+    }
+    if (seq[0] == '[') {
+        switch (seq[1]) {
+        case 'A':
+            return Key::Code::Up;
+        case 'B':
+            return Key::Code::Down;
+        case 'C':
+            return Key::Code::Right;
+        case 'D':
+            return Key::Code::Left;
+        }
+    }
+    return Key::Code { '\e' };
+}
+
+Key::Code read_key()
 {
     ssize_t n = -1;
-    char c = 0;
+    uint8_t c = 0;
     while ((n = ::read(STDIN_FILENO, &c, 1)) != 1) {
         if (n == -1 && errno != EAGAIN) {
             os::exit_err("read() failed");
         }
     }
-    return c;
+    if (c == '\e') {
+        return read_escape_sequence();
+    }
+    return Key::Code { c };
 }
 
 void write_screen_buffer()
