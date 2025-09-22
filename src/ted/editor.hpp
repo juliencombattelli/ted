@@ -13,7 +13,12 @@ struct State {
     char eob_char;
 };
 
-void init(State& state, size_t rows, size_t column);
+extern State state;
+
+void init(size_t rows, size_t column);
+
+void screen_buffer_append(char c);
+void screen_buffer_append(const char* s);
 
 } // namespace ted::editor
 

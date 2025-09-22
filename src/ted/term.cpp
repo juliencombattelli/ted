@@ -1,3 +1,4 @@
+#include <ted/editor.hpp>
 #include <ted/term.hpp>
 
 #include <array>
@@ -10,8 +11,7 @@ namespace ted::term {
 
 static void send_code(const char* code)
 {
-    // TODO handle error?
-    (void)std::fputs(code, stdout);
+    editor::screen_buffer_append(code);
 }
 
 void cursor_home()

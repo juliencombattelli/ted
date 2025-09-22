@@ -1,8 +1,10 @@
+#include <climits>
 #include <ted/editor.hpp>
 #include <ted/os.hpp>
 #include <ted/term.hpp>
 #include <ted/tui.hpp>
 
+#include <cassert>
 #include <cctype>
 #include <cstdio>
 #include <utility>
@@ -10,7 +12,7 @@
 namespace ted::tui {
 
 [[nodiscard]]
-static int read_key()
+static char read_key()
 {
     int c = std::fgetc(stdin);
     if (c == EOF) {
@@ -22,10 +24,11 @@ static int read_key()
         }
         std::unreachable();
     }
-    return c;
+    assert(c <= UCHAR_MAX);
+    return (char)c;
 }
 
-static void process_key(int c)
+static void process_key(char c)
 {
     // if (std::iscntrl(c)) {
     //     std::printf("%d\r\n", c);
@@ -41,14 +44,13 @@ static void process_key(int c)
         term::clear();
         break;
     case '\r':
-        std::putchar('\r');
-        std::putchar('\n');
+        editor::screen_buffer_append("\r\n");
     default:
-        std::putchar(c);
+        editor::screen_buffer_append(c);
     }
 }
 
-static void init(editor::State& state)
+static void init()
 {
     size_t rows = 0, cols = 0;
     term::init();
@@ -56,7 +58,7 @@ static void init(editor::State& state)
         // Fallback to escape sequence computing
         os::exit_err("ted::term::get_size() failed");
     }
-    editor::init(state, rows, cols);
+    editor::init(rows, cols);
 }
 
 static void draw_eob_chars(editor::State& state)
@@ -65,26 +67,28 @@ static void draw_eob_chars(editor::State& state)
     for (int row = 0; row < state.screen_rows - 1; row++) {
         char eob_row[] = " \r\n";
         eob_row[0] = eob_char;
-        (void)std::fputs(eob_row, stdout);
+        editor::screen_buffer_append(eob_row);
     }
-    (void)std::fwrite(&eob_char, 1, 1, stdout);
+    editor::screen_buffer_append(eob_char);
 }
 
-static void refresh_screen(editor::State& state)
+static void refresh_screen()
 {
     term::clear();
-    draw_eob_chars(state);
+    draw_eob_chars(editor::state);
     term::cursor_home();
+    std::string& screen_buffer = editor::state.screen_buffer;
+    // TODO handle write error?
+    (void)std::fwrite(screen_buffer.data(), 1, screen_buffer.length(), stdout);
+    screen_buffer.clear();
 }
 
 void start()
 {
-    editor::State editor_state {};
-    init(editor_state);
-    int c = 0;
+    init();
     while (true) {
-        refresh_screen(editor_state);
-        int c = read_key();
+        refresh_screen();
+        char c = read_key();
         process_key(c);
     }
 }
