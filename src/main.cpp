@@ -16,7 +16,7 @@ int main(int /*argc*/, char* /*argv*/[])
         return 1;
     }
 
-    ted::editor::State editor_state;
+    ted::editor::State editor_state {};
     ted::editor::init(editor_state);
 
     ted::tui::start(editor_state);

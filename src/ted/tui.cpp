@@ -27,11 +27,11 @@ static int read_key()
 
 static void process_key(int c)
 {
-    if (std::iscntrl(c)) {
-        std::printf("%d\r\n", c);
-    } else {
-        std::printf("%d ('%c')\r\n", c, c);
-    }
+    // if (std::iscntrl(c)) {
+    //     std::printf("%d\r\n", c);
+    // } else {
+    //     std::printf("%d ('%c')\r\n", c, c);
+    // }
 
     switch (c) {
     case term::key_ctrl('q'):
@@ -76,10 +76,10 @@ static void refresh_screen(editor::State& state)
 void start(editor::State& state)
 {
     tui::init(state);
-    unsigned char c = '\0';
+    int c = 0;
     while (true) {
         refresh_screen(state);
-        char c = read_key();
+        int c = read_key();
         process_key(c);
     }
 }
