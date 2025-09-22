@@ -30,24 +30,29 @@ static char read_key()
 
 static void process_key(char c)
 {
-    // if (std::iscntrl(c)) {
-    //     std::printf("%d\r\n", c);
-    // } else {
-    //     std::printf("%d ('%c')\r\n", c, c);
-    // }
+    fprintf(stderr, "key pressed: %d (%c)\n", c, c);
 
-    switch (c) {
-    case term::key_ctrl('q'):
-        ted::os::exit_ok();
-        break;
-    case term::key_ctrl('c'):
-        term::clear();
-        break;
-    case '\r':
-        editor::screen_buffer_append("\r\n");
-    default:
+    auto key_handler = editor::state.keymap[c];
+    if (key_handler != nullptr) {
+        // TODO handle userdata
+        key_handler(nullptr);
+    } else {
         editor::screen_buffer_append(c);
     }
+}
+
+static void load_default_tui_keymap()
+{
+    // TODO replace with arrow keys
+    editor::state.keymap['z'] = [](void*) { editor::cursor_up(); };
+    editor::state.keymap['s'] = [](void*) { editor::cursor_down(); };
+    editor::state.keymap['d'] = [](void*) { editor::cursor_right(); };
+    editor::state.keymap['q'] = [](void*) { editor::cursor_left(); };
+
+    editor::state.keymap['\r']
+        = [](void*) { editor::screen_buffer_append("\r\n"); };
+
+    editor::state.keymap[term::key_ctrl('q')] = [](void*) { os::exit_ok(); };
 }
 
 static void init()
@@ -59,6 +64,7 @@ static void init()
         os::exit_err("ted::term::get_size() failed");
     }
     editor::init(rows, cols);
+    load_default_tui_keymap();
 }
 
 static void draw_eob_chars(editor::State& state)
@@ -68,15 +74,19 @@ static void draw_eob_chars(editor::State& state)
         char eob_row[] = " \r\n";
         eob_row[0] = eob_char;
         editor::screen_buffer_append(eob_row);
+        term::erase_line();
     }
     editor::screen_buffer_append(eob_char);
 }
 
 static void refresh_screen()
 {
-    term::clear();
+    term::cursor_hide();
+    // term::clear();
     draw_eob_chars(editor::state);
-    term::cursor_home();
+    term::cursor_move(editor::state.cursor_row, editor::state.cursor_col);
+    term::cursor_show();
+
     std::string& screen_buffer = editor::state.screen_buffer;
     // TODO handle write error?
     (void)std::fwrite(screen_buffer.data(), 1, screen_buffer.length(), stdout);
