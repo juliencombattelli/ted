@@ -20,14 +20,16 @@ enum class EraseLineMode : uint8_t {
     LeftOfCursor = 1,
     AllLine = 2,
 };
-void erase_line(EraseLineMode mode = EraseLineMode::AllLine);
+void erase_line(EraseLineMode mode);
+void erase_line();
 
 enum class ClearMode : uint8_t {
     CursorToTop = 0,
     CursorToBottom = 1,
     AllScreen = 2,
 };
-void clear(ClearMode mode = ClearMode::AllScreen);
+void clear(ClearMode mode);
+void clear();
 
 [[nodiscard]]
 constexpr char key_ctrl(char key)

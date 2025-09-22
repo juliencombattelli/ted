@@ -30,7 +30,7 @@ static char read_key()
 
 static void process_key(char c)
 {
-    fprintf(stderr, "key pressed: %d (%c)\n", c, c);
+    // fprintf(stderr, "key pressed: %d (%c)\n", c, c);
 
     auto key_handler = editor::state.keymap[c];
     if (key_handler != nullptr) {
@@ -71,19 +71,21 @@ static void draw_eob_chars(editor::State& state)
 {
     char eob_char = state.eob_char;
     for (int row = 0; row < state.screen_rows - 1; row++) {
-        char eob_row[] = " \r\n";
-        eob_row[0] = eob_char;
-        editor::screen_buffer_append(eob_row);
+        editor::screen_buffer_append(eob_char);
         term::erase_line();
+        editor::screen_buffer_append("\r\n");
     }
     editor::screen_buffer_append(eob_char);
+    term::erase_line();
 }
 
 static void refresh_screen()
 {
     term::cursor_hide();
-    // term::clear();
+    term::cursor_home();
+
     draw_eob_chars(editor::state);
+
     term::cursor_move(editor::state.cursor_row, editor::state.cursor_col);
     term::cursor_show();
 

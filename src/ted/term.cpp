@@ -65,6 +65,11 @@ void erase_line(EraseLineMode mode)
     send_code(code);
 }
 
+void erase_line()
+{
+    send_code("\e[K");
+}
+
 void clear(ClearMode mode)
 {
     static constexpr std::array codes {
@@ -75,6 +80,11 @@ void clear(ClearMode mode)
     assert(std::to_underlying(mode) < codes.size());
     const char* code = codes[std::to_underlying(mode)];
     send_code(code);
+}
+
+void clear()
+{
+    send_code("\e[J");
 }
 
 } // namespace ted::term

@@ -29,19 +29,27 @@ void screen_buffer_append(const char* s)
 
 void cursor_up()
 {
-    state.cursor_row--;
+    if (state.cursor_row > 0) {
+        state.cursor_row--;
+    }
 }
 void cursor_down()
 {
-    state.cursor_row++;
+    if (state.cursor_row < state.screen_rows) {
+        state.cursor_row++;
+    }
 }
 void cursor_left()
 {
-    state.cursor_col--;
+    if (state.cursor_col > 0) {
+        state.cursor_col--;
+    }
 }
 void cursor_right()
 {
-    state.cursor_col++;
+    if (state.cursor_col < state.screen_cols) {
+        state.cursor_col++;
+    }
 }
 
 } // namespace ted::editor
