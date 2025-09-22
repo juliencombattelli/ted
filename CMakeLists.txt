@@ -14,8 +14,10 @@ endif()
 
 add_executable(ted
     src/main.cpp
+    src/ted/editor.cpp
     src/ted/os.cpp
     src/ted/term.cpp
+    src/ted/tui.cpp
     src/ted/platform/${PLATFORM_DIR}/os.cpp
     src/ted/platform/${PLATFORM_DIR}/term.cpp
 )

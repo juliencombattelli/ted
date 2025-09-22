@@ -2,10 +2,13 @@
 #define TED_TERM_HPP_
 
 #include <cstdint>
+#include <cstdlib>
 
 namespace ted::term {
 
 void init();
+
+bool get_size(size_t& rows, size_t& columns);
 
 void cursor_home();
 

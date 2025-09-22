@@ -1,10 +1,12 @@
 #include <ted/os.hpp>
 #include <ted/term.hpp>
 
-#include <cstdio>
-#include <cstdlib>
+#include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
+
+#include <cstdio>
+#include <cstdlib>
 
 namespace ted::term {
 
@@ -38,6 +40,17 @@ static void enable_raw_mode()
 void init()
 {
     enable_raw_mode();
+}
+
+bool get_size(size_t& rows, size_t& columns)
+{
+    winsize ws {};
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
+        return false;
+    }
+    rows = ws.ws_row;
+    columns = ws.ws_col;
+    return true;
 }
 
 } // namespace ted::term
