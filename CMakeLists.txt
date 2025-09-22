@@ -3,6 +3,7 @@ project(ted)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_REQUIRED yes)
+set(CMAKE_CXX_EXTENSIONS no)
 
 if(WIN32)
     set(PLATFORM_DIR win32)
