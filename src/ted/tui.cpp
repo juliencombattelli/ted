@@ -59,11 +59,13 @@ static void init(editor::State& state)
 
 static void draw_eob_chars(editor::State& state)
 {
-    for (int row = 0; row < state.screen_rows; row++) {
+    char eob_char = state.eob_char;
+    for (int row = 0; row < state.screen_rows - 1; row++) {
         char eob_row[] = " \r\n";
-        eob_row[0] = state.eob_char;
+        eob_row[0] = eob_char;
         (void)std::fputs(eob_row, stdout);
     }
+    (void)std::fwrite(&eob_char, 1, 1, stdout);
 }
 
 static void refresh_screen(editor::State& state)
