@@ -1,11 +1,9 @@
 #ifndef TED_TUI_HPP_
 #define TED_TUI_HPP_
 
-#include <ted/editor.hpp>
-
 namespace ted::tui {
 
-void start(editor::State& state);
+void start();
 
 } // namespace ted::tui
 

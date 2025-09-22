@@ -2,16 +2,18 @@
 #define TED_EDITOR_HPP_
 
 #include <cstdlib>
+#include <string>
 
 namespace ted::editor {
 
 struct State {
+    std::string screen_buffer;
     size_t screen_rows;
     size_t screen_cols;
     char eob_char;
 };
 
-void init(State& state);
+void init(State& state, size_t rows, size_t column);
 
 } // namespace ted::editor
 

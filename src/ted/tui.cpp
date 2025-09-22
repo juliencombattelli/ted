@@ -50,11 +50,13 @@ static void process_key(int c)
 
 static void init(editor::State& state)
 {
+    size_t rows = 0, cols = 0;
     term::init();
-    if (!term::get_size(state.screen_rows, state.screen_cols)) {
+    if (!term::get_size(rows, cols)) {
         // Fallback to escape sequence computing
         os::exit_err("ted::term::get_size() failed");
     }
+    editor::init(state, rows, cols);
 }
 
 static void draw_eob_chars(editor::State& state)
@@ -75,12 +77,13 @@ static void refresh_screen(editor::State& state)
     term::cursor_home();
 }
 
-void start(editor::State& state)
+void start()
 {
-    tui::init(state);
+    editor::State editor_state {};
+    init(editor_state);
     int c = 0;
     while (true) {
-        refresh_screen(state);
+        refresh_screen(editor_state);
         int c = read_key();
         process_key(c);
     }
