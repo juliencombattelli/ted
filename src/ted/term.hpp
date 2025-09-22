@@ -37,6 +37,11 @@ constexpr char key_ctrl(char key)
     return key & 0x1f;
 }
 
+[[nodiscard]]
+char read_key();
+
+void write_screen_buffer();
+
 } // namespace ted::term
 
 #endif // TED_TERM_HPP_

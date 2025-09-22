@@ -1,4 +1,3 @@
-#include <climits>
 #include <ted/editor.hpp>
 #include <ted/os.hpp>
 #include <ted/term.hpp>
@@ -6,32 +5,13 @@
 
 #include <cassert>
 #include <cctype>
+#include <climits>
 #include <cstdio>
-#include <utility>
 
 namespace ted::tui {
 
-[[nodiscard]]
-static char read_key()
-{
-    int c = std::fgetc(stdin);
-    if (c == EOF) {
-        if (std::ferror(stdin)) {
-            os::exit_err("fread() failed");
-        }
-        if (std::feof(stdin)) {
-            os::exit_err("fread() end-of-file", 0);
-        }
-        std::unreachable();
-    }
-    assert(c <= UCHAR_MAX);
-    return (char)c;
-}
-
 static void process_key(char c)
 {
-    // fprintf(stderr, "key pressed: %d (%c)\n", c, c);
-
     auto key_handler = editor::state.keymap[c];
     if (key_handler != nullptr) {
         // TODO handle userdata
@@ -89,10 +69,7 @@ static void refresh_screen()
     term::cursor_move(editor::state.cursor_row, editor::state.cursor_col);
     term::cursor_show();
 
-    std::string& screen_buffer = editor::state.screen_buffer;
-    // TODO handle write error?
-    (void)std::fwrite(screen_buffer.data(), 1, screen_buffer.length(), stdout);
-    screen_buffer.clear();
+    term::write_screen_buffer();
 }
 
 void start()
@@ -100,7 +77,7 @@ void start()
     init();
     while (true) {
         refresh_screen();
-        char c = read_key();
+        char c = term::read_key();
         process_key(c);
     }
 }

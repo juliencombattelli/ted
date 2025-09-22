@@ -1,3 +1,4 @@
+#include <ted/editor.hpp>
 #include <ted/os.hpp>
 #include <ted/term.hpp>
 
@@ -5,8 +6,10 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
+#include <string>
 
 namespace ted::term {
 
@@ -51,6 +54,25 @@ bool get_size(size_t& rows, size_t& columns)
     rows = ws.ws_row;
     columns = ws.ws_col;
     return true;
+}
+
+char read_key()
+{
+    ssize_t n = -1;
+    char c = 0;
+    while ((n = ::read(STDIN_FILENO, &c, 1)) != 1) {
+        if (n == -1 && errno != EAGAIN) {
+            os::exit_err("read() failed");
+        }
+    }
+    return c;
+}
+
+void write_screen_buffer()
+{
+    std::string& screen_buffer = editor::state.screen_buffer;
+    (void)::write(STDOUT_FILENO, screen_buffer.data(), screen_buffer.length());
+    screen_buffer.clear();
 }
 
 } // namespace ted::term
