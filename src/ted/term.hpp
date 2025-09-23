@@ -43,7 +43,7 @@ constexpr char key_ctrl(char key)
 }
 
 [[nodiscard]]
-Key::Code read_key();
+bool read_key(uint8_t& byte);
 
 void write_screen_buffer();
 

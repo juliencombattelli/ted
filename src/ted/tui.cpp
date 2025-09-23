@@ -11,6 +11,45 @@
 
 namespace ted::tui {
 
+[[nodiscard]]
+static Key::Code read_escape_sequence()
+{
+    uint8_t seq[3];
+
+    if (!term::read_key(seq[0])) {
+        return Key::Code { '\e' };
+    }
+    if (!term::read_key(seq[1])) {
+        return Key::Code { '\e' };
+    }
+    if (seq[0] == '[') {
+        switch (seq[1]) {
+        case 'A':
+            return Key::Code::Up;
+        case 'B':
+            return Key::Code::Down;
+        case 'C':
+            return Key::Code::Right;
+        case 'D':
+            return Key::Code::Left;
+        default:
+            break;
+        }
+    }
+    return Key::Code { '\e' };
+}
+
+[[nodiscard]]
+static Key::Code read_key()
+{
+    uint8_t byte = 0;
+    while (!term::read_key(byte)) { }
+    if (byte == '\e') {
+        return read_escape_sequence();
+    }
+    return Key::Code { byte };
+}
+
 static void process_key(Key::Code keycode)
 {
     auto key_handler = editor::state.keymap[keycode];
@@ -81,7 +120,7 @@ void start()
     init();
     while (true) {
         refresh_screen();
-        Key::Code keycode = term::read_key();
+        Key::Code keycode = read_key();
         process_key(keycode);
     }
 }
