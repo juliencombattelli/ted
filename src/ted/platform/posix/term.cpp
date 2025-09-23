@@ -27,9 +27,6 @@ static void enable_raw_mode()
     if (tcgetattr(STDIN_FILENO, &original_termios) != 0) {
         os::exit_err("tcgetattr() failed");
     }
-    if (std::atexit(disable_raw_mode) != 0) {
-        os::exit_err("std::atexit() failed");
-    }
     termios raw = original_termios;
     raw.c_iflag &= ~(IXON | ICRNL | ISTRIP | INPCK | BRKINT);
     raw.c_oflag &= ~(OPOST);
@@ -42,9 +39,20 @@ static void enable_raw_mode()
     }
 }
 
+void deinit()
+{
+    disable_raw_mode();
+    enter_main_screen_buffer();
+}
+
 void init()
 {
+    enter_alternate_screen_buffer();
     enable_raw_mode();
+
+    if (std::atexit(deinit) != 0) {
+        os::exit_err("std::atexit() failed");
+    }
 }
 
 bool get_size(size_t& rows, size_t& columns)
@@ -79,6 +87,7 @@ static Key::Code read_escape_sequence()
             return Key::Code::Right;
         case 'D':
             return Key::Code::Left;
+        default:
         }
     }
     return Key::Code { '\e' };
@@ -102,6 +111,7 @@ Key::Code read_key()
 void write_screen_buffer()
 {
     std::string& screen_buffer = editor::state.screen_buffer;
+    // TODO handle error
     (void)::write(STDOUT_FILENO, screen_buffer.data(), screen_buffer.length());
     screen_buffer.clear();
 }

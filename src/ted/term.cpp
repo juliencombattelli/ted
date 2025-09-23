@@ -87,4 +87,16 @@ void clear()
     send_code("\e[J");
 }
 
+void enter_main_screen_buffer()
+{
+    // Send code right away
+    std::puts("\e[?1049l");
+}
+
+void enter_alternate_screen_buffer()
+{
+    // Send code right away
+    std::puts("\e[?1049h");
+}
+
 } // namespace ted::term

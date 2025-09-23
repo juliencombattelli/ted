@@ -33,6 +33,9 @@ enum class ClearMode : uint8_t {
 void clear(ClearMode mode);
 void clear();
 
+void enter_main_screen_buffer();
+void enter_alternate_screen_buffer();
+
 [[nodiscard, deprecated]]
 constexpr char key_ctrl(char key)
 {
