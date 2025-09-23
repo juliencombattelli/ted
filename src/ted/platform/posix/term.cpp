@@ -50,9 +50,7 @@ void init()
     enter_alternate_screen_buffer();
     enable_raw_mode();
 
-    if (std::atexit(deinit) != 0) {
-        os::exit_err("std::atexit() failed");
-    }
+    os::at_exit(os::Ring::_1, deinit);
 }
 
 bool get_size(size_t& rows, size_t& columns)
@@ -88,6 +86,7 @@ static Key::Code read_escape_sequence()
         case 'D':
             return Key::Code::Left;
         default:
+            break;
         }
     }
     return Key::Code { '\e' };
