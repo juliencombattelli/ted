@@ -91,10 +91,9 @@ void exit_ok()
     std::exit(EXIT_SUCCESS);
 }
 
-static const char* exit_message;
 void exit_err(const char* msg)
 {
-    exit_message = msg;
+    static const char* exit_message = msg;
     at_exit_ring0([] { std::perror(exit_message); });
     std::exit(EXIT_FAILURE);
 }
