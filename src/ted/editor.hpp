@@ -9,6 +9,7 @@
 #include <cstdlib>
 #include <string>
 #include <utility>
+#include <vector>
 
 #define TED_VERSION_MAJOR 0
 #define TED_VERSION_MINOR 1
@@ -23,12 +24,23 @@ namespace ted::editor {
 using KeyHandler = void(void* userdata);
 using KeyMap = std::array<KeyHandler*, std::to_underlying(Key::Count)>;
 
+struct File {
+    File()
+    {
+        // TODO handle newline type depending on settings
+        lines.emplace_back("\n");
+    }
+    std::vector<std::string> lines;
+};
+
 struct ScreenSize {
     size_t rows {};
     size_t cols {};
 };
 
 struct State {
+    std::vector<File> opened_files;
+    File* viewed_file;
     std::string screen_buffer;
     ScreenSize screen_size;
     size_t cursor_row = 0;
@@ -56,6 +68,8 @@ size_t get_screen_cols();
 
 void set_keymap(Key::Code keycode, KeyHandler* handler);
 KeyHandler* get_keymap(Key::Code keycode);
+
+void open_new_file();
 
 } // namespace ted::editor
 

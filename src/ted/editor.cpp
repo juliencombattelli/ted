@@ -85,4 +85,9 @@ KeyHandler* get_keymap(Key::Code keycode)
     return state.keymap[keycode];
 }
 
+void open_new_file()
+{
+    state.viewed_file = &state.opened_files.emplace_back();
+}
+
 } // namespace ted::editor

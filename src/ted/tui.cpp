@@ -211,11 +211,11 @@ static void draw_welcome_message(size_t welcome_message_line)
     editor::screen_buffer_append(line.c_str());
 }
 
-static void draw_eob_chars()
+static void draw_eob_chars(size_t eob_row)
 {
     char eob_char = editor::state.eob_char;
     size_t welcome_message_line = 0;
-    for (int row = 0; row < editor::get_screen_rows() - 1; row++) {
+    for (size_t row = eob_row; row < editor::get_screen_rows() - 1; row++) {
         editor::screen_buffer_append(eob_char);
         if (can_draw_welcome_message() && should_draw_welcome_message(row)) {
             draw_welcome_message(welcome_message_line++);
@@ -234,7 +234,16 @@ static void refresh_screen()
     term::cursor_hide();
     term::cursor_home();
 
-    draw_eob_chars();
+    size_t eob_row = 0;
+    if (editor::state.viewed_file != nullptr) {
+        editor::File& file = *editor::state.viewed_file;
+        for (const auto& line : file.lines) {
+            editor::screen_buffer_append(line.c_str());
+        }
+        eob_row = file.lines.size();
+    }
+
+    draw_eob_chars(eob_row);
 
     term::cursor_move(editor::state.cursor_row, editor::state.cursor_col);
     term::cursor_show();

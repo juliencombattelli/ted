@@ -18,5 +18,7 @@ int main(int /*argc*/, char* /*argv*/[])
 
     ted::editor::init();
     ted::tui::init();
+    // TODO handle input files from argv
+    ted::editor::open_new_file();
     ted::tui::start();
 }
