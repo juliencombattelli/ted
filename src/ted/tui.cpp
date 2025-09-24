@@ -25,15 +25,52 @@ static Key::Code read_escape_sequence()
         return Key::Code { '\e' };
     }
     if (seq[0] == '[') {
+        if (seq[1] >= '0' && seq[1] <= '9') {
+            if (!term::read_key(seq[2])) {
+                return Key::Code { '\e' };
+            }
+            if (seq[2] == '~') {
+                switch (seq[1]) {
+                case '1':
+                    return Key::Code::Home;
+                case '4':
+                    return Key::Code::End;
+                case '5':
+                    return Key::Code::PageUp;
+                case '6':
+                    return Key::Code::PageDown;
+                case '7':
+                    return Key::Code::Home;
+                case '8':
+                    return Key::Code::End;
+                default:
+                    break;
+                }
+            }
+        } else {
+            switch (seq[1]) {
+            case 'A':
+                return Key::Code::Up;
+            case 'B':
+                return Key::Code::Down;
+            case 'C':
+                return Key::Code::Right;
+            case 'D':
+                return Key::Code::Left;
+            case 'H':
+                return Key::Code::Home;
+            case 'F':
+                return Key::Code::End;
+            default:
+                break;
+            }
+        }
+    } else if (seq[0] == 'O') {
         switch (seq[1]) {
-        case 'A':
-            return Key::Code::Up;
-        case 'B':
-            return Key::Code::Down;
-        case 'C':
-            return Key::Code::Right;
-        case 'D':
-            return Key::Code::Left;
+        case 'H':
+            return Key::Code::Home;
+        case 'F':
+            return Key::Code::End;
         default:
             break;
         }
@@ -73,6 +110,26 @@ static void load_default_tui_keymap()
         = [](void*) { editor::cursor_right(); };
     editor::state.keymap[Key::Code::Left]
         = [](void*) { editor::cursor_left(); };
+
+    editor::state.keymap[Key::Code::PageUp] = [](void*) {
+        size_t times = editor::state.screen_rows;
+        while (times--) {
+            editor::cursor_up();
+        }
+    };
+    editor::state.keymap[Key::Code::PageDown] = [](void*) {
+        size_t times = editor::state.screen_rows;
+        while (times--) {
+            editor::cursor_down();
+        }
+    };
+
+    editor::state.keymap[Key::Code::Home]
+        = [](void*) { editor::state.cursor_col = 0; };
+
+    editor::state.keymap[Key::Code::End] = [](void*) {
+        editor::state.cursor_col = editor::state.screen_cols - 1;
+    };
 
     editor::state.keymap['\r']
         = [](void*) { editor::screen_buffer_append("\r\n"); };

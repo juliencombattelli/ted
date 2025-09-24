@@ -9,6 +9,7 @@ struct Key {
     enum Code : uint16_t {
         // All ascii scancode are before 256
 
+        // The values up to 512 are following the ncurses numbering scheme
         Break = 257,
         Down,
         Up,
@@ -16,6 +17,11 @@ struct Key {
         Right,
         Home,
         Backspace,
+
+        PageDown = 338,
+        PageUp,
+
+        End = 360,
 
         Count = 512,
     };
