@@ -109,13 +109,13 @@ static void load_default_tui_keymap()
     editor::set_keymap(Key::Code::Left, [](void*) { editor::cursor_left(); });
 
     editor::set_keymap(Key::Code::PageUp, [](void*) {
-        size_t times = editor::state.screen_rows;
+        size_t times = editor::get_screen_rows();
         while (times--) {
             editor::cursor_up();
         }
     });
     editor::set_keymap(Key::Code::PageDown, [](void*) {
-        size_t times = editor::state.screen_rows;
+        size_t times = editor::get_screen_rows();
         while (times--) {
             editor::cursor_down();
         }
@@ -125,7 +125,7 @@ static void load_default_tui_keymap()
         editor::state.cursor_col = 0;
     });
     editor::set_keymap(Key::Code::End, [](void*) {
-        editor::state.cursor_col = editor::state.screen_cols - 1;
+        editor::state.cursor_col = editor::get_screen_cols() - 1;
     });
 
     editor::set_keymap(Key::Code { '\r' }, [](void*) {
@@ -144,16 +144,17 @@ static void handle_resize()
         // TODO fallback to escape sequence computing
         os::exit_err("ted::term::get_size() failed");
     }
-    if (rows != editor::state.screen_rows
-        || cols != editor::state.screen_cols) {
-        editor::state.screen_rows = rows;
-        editor::state.screen_cols = cols;
+    size_t screen_size_rows = editor::get_screen_rows();
+    size_t screen_size_cols = editor::get_screen_cols();
+    if (rows != screen_size_rows || cols != screen_size_cols) {
+        editor::set_screen_rows(rows);
+        editor::set_screen_cols(cols);
         // TODO consider clearing the screen in case of artifacts on resize
         // term::clear();
     }
 }
 
-static void init()
+void init()
 {
     size_t rows = 0;
     size_t cols = 0;
@@ -162,7 +163,8 @@ static void init()
         // TODO fallback to escape sequence computing
         os::exit_err("ted::term::get_size() failed");
     }
-    editor::init(rows, cols);
+    editor::set_screen_rows(rows);
+    editor::set_screen_cols(cols);
     load_default_tui_keymap();
 }
 
@@ -188,15 +190,15 @@ static bool can_draw_welcome_message()
 
     static constexpr size_t line_count = size(welcome_message);
 
-    return longest_line_len < editor::state.screen_cols - 1 // EOB char
-        && line_count < editor::state.screen_rows;
+    return longest_line_len < editor::get_screen_cols() - 1 // EOB char
+        && line_count < editor::get_screen_rows();
 }
 
 [[nodiscard]]
 static bool should_draw_welcome_message(size_t current_row)
 {
-    size_t start_line = (editor::state.screen_rows - size(welcome_message)) / 2;
-    size_t end_line = (editor::state.screen_rows + size(welcome_message)) / 2;
+    size_t start_line = (editor::get_screen_rows() - size(welcome_message)) / 2;
+    size_t end_line = (editor::get_screen_rows() + size(welcome_message)) / 2;
     return start_line <= current_row && current_row <= end_line;
 }
 
@@ -205,7 +207,7 @@ static void draw_welcome_message(size_t welcome_message_line)
     std::string line = std::format(
         "{:^{}}",
         welcome_message[welcome_message_line],
-        editor::state.screen_cols - 1);
+        editor::get_screen_cols() - 1);
     editor::screen_buffer_append(line.c_str());
 }
 
@@ -213,7 +215,7 @@ static void draw_eob_chars()
 {
     char eob_char = editor::state.eob_char;
     size_t welcome_message_line = 0;
-    for (int row = 0; row < editor::state.screen_rows - 1; row++) {
+    for (int row = 0; row < editor::get_screen_rows() - 1; row++) {
         editor::screen_buffer_append(eob_char);
         if (can_draw_welcome_message() && should_draw_welcome_message(row)) {
             draw_welcome_message(welcome_message_line++);
@@ -242,7 +244,6 @@ static void refresh_screen()
 
 void start()
 {
-    init();
     while (true) {
         refresh_screen();
         Key::Code keycode = read_key();

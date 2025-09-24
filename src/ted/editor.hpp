@@ -23,19 +23,23 @@ namespace ted::editor {
 using KeyHandler = void(void* userdata);
 using KeyMap = std::array<KeyHandler*, std::to_underlying(Key::Count)>;
 
+struct ScreenSize {
+    size_t rows {};
+    size_t cols {};
+};
+
 struct State {
     std::string screen_buffer;
-    size_t screen_rows = 0;
-    size_t screen_cols = 0;
+    ScreenSize screen_size;
     size_t cursor_row = 0;
     size_t cursor_col = 0;
-    char eob_char = '\0';
+    char eob_char;
     KeyMap keymap;
 };
 
 extern State state;
 
-void init(size_t rows, size_t column);
+void init();
 
 void screen_buffer_append(char c);
 void screen_buffer_append(const char* s);
@@ -44,6 +48,11 @@ void cursor_up();
 void cursor_down();
 void cursor_left();
 void cursor_right();
+
+void set_screen_rows(size_t rows);
+size_t get_screen_rows();
+void set_screen_cols(size_t cols);
+size_t get_screen_cols();
 
 void set_keymap(Key::Code keycode, KeyHandler* handler);
 KeyHandler* get_keymap(Key::Code keycode);

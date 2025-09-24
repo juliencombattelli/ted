@@ -3,6 +3,8 @@
 
 namespace ted::tui {
 
+void init();
+
 void start();
 
 } // namespace ted::tui

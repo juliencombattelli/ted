@@ -1,3 +1,4 @@
+#include <ted/editor.hpp>
 #include <ted/os.hpp>
 #include <ted/tui.hpp>
 
@@ -15,5 +16,7 @@ int main(int /*argc*/, char* /*argv*/[])
         return 1;
     }
 
+    ted::editor::init();
+    ted::tui::init();
     ted::tui::start();
 }

@@ -7,14 +7,11 @@ namespace ted::editor {
 
 State state;
 
-void init(size_t rows, size_t cols)
+void init()
 {
-    state.screen_rows = rows;
-    state.screen_cols = cols;
+    // Load default configuration
     state.eob_char = '~';
-    state.screen_buffer.reserve(state.screen_rows * state.screen_cols);
-
-    // keymap is not initialized here as the default mapping could change
+    // Keymap is not initialized here as the default mapping could change
     // between a TUI or GUI mode
 }
 
@@ -35,7 +32,7 @@ void cursor_up()
 }
 void cursor_down()
 {
-    if (state.cursor_row < state.screen_rows) {
+    if (state.cursor_row < state.screen_size.rows) {
         state.cursor_row++;
     }
 }
@@ -47,9 +44,35 @@ void cursor_left()
 }
 void cursor_right()
 {
-    if (state.cursor_col < state.screen_cols) {
+    if (state.cursor_col < state.screen_size.cols) {
         state.cursor_col++;
     }
+}
+
+void set_screen_size(ScreenSize screen_size)
+{
+    state.screen_size = screen_size;
+    state.screen_buffer.reserve(screen_size.rows * screen_size.cols);
+}
+ScreenSize get_screen_size()
+{
+    return state.screen_size;
+}
+void set_screen_rows(size_t rows)
+{
+    set_screen_size(ScreenSize { rows, get_screen_cols() });
+}
+size_t get_screen_rows()
+{
+    return state.screen_size.rows;
+}
+void set_screen_cols(size_t cols)
+{
+    set_screen_size(ScreenSize { get_screen_rows(), cols });
+}
+size_t get_screen_cols()
+{
+    return state.screen_size.cols;
 }
 
 void set_keymap(Key::Code keycode, KeyHandler* handler)
