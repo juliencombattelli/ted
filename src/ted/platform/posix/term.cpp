@@ -32,8 +32,8 @@ static void enable_raw_mode()
     raw.c_oflag &= ~(OPOST);
     raw.c_cflag |= (CS8);
     raw.c_lflag &= ~(IEXTEN | ECHO | ICANON | ISIG);
-    raw.c_cc[VMIN] = 0;
-    raw.c_cc[VTIME] = 1;
+    // raw.c_cc[VMIN] = 0;
+    // raw.c_cc[VTIME] = 1;
     if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) != 0) {
         os::exit_err("tcsetattr() failed");
     }
