@@ -91,7 +91,7 @@ static Key::Code read_key()
 
 static void process_key(Key::Code keycode)
 {
-    auto key_handler = editor::state.keymap[keycode];
+    auto key_handler = editor::get_keymap(keycode);
     if (key_handler != nullptr) {
         // TODO handle userdata
         key_handler(nullptr);

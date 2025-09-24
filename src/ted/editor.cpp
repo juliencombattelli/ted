@@ -57,4 +57,9 @@ void set_keymap(Key::Code keycode, KeyHandler* handler)
     state.keymap[keycode] = handler;
 }
 
+KeyHandler* get_keymap(Key::Code keycode)
+{
+    return state.keymap[keycode];
+}
+
 } // namespace ted::editor

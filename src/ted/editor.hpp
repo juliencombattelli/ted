@@ -46,6 +46,7 @@ void cursor_left();
 void cursor_right();
 
 void set_keymap(Key::Code keycode, KeyHandler* handler);
+KeyHandler* get_keymap(Key::Code keycode);
 
 } // namespace ted::editor
 
