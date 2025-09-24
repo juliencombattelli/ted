@@ -103,38 +103,36 @@ static void process_key(Key::Code keycode)
 
 static void load_default_tui_keymap()
 {
-    editor::state.keymap[Key::Code::Up] = [](void*) { editor::cursor_up(); };
-    editor::state.keymap[Key::Code::Down]
-        = [](void*) { editor::cursor_down(); };
-    editor::state.keymap[Key::Code::Right]
-        = [](void*) { editor::cursor_right(); };
-    editor::state.keymap[Key::Code::Left]
-        = [](void*) { editor::cursor_left(); };
+    editor::set_keymap(Key::Code::Up, [](void*) { editor::cursor_up(); });
+    editor::set_keymap(Key::Code::Down, [](void*) { editor::cursor_down(); });
+    editor::set_keymap(Key::Code::Right, [](void*) { editor::cursor_right(); });
+    editor::set_keymap(Key::Code::Left, [](void*) { editor::cursor_left(); });
 
-    editor::state.keymap[Key::Code::PageUp] = [](void*) {
+    editor::set_keymap(Key::Code::PageUp, [](void*) {
         size_t times = editor::state.screen_rows;
         while (times--) {
             editor::cursor_up();
         }
-    };
-    editor::state.keymap[Key::Code::PageDown] = [](void*) {
+    });
+    editor::set_keymap(Key::Code::PageDown, [](void*) {
         size_t times = editor::state.screen_rows;
         while (times--) {
             editor::cursor_down();
         }
-    };
+    });
 
-    editor::state.keymap[Key::Code::Home]
-        = [](void*) { editor::state.cursor_col = 0; };
-
-    editor::state.keymap[Key::Code::End] = [](void*) {
+    editor::set_keymap(Key::Code::Home, [](void*) {
+        editor::state.cursor_col = 0;
+    });
+    editor::set_keymap(Key::Code::End, [](void*) {
         editor::state.cursor_col = editor::state.screen_cols - 1;
-    };
+    });
 
-    editor::state.keymap['\r']
-        = [](void*) { editor::screen_buffer_append("\r\n"); };
+    editor::set_keymap(Key::Code { '\r' }, [](void*) {
+        editor::screen_buffer_append("\r\n");
+    });
 
-    editor::state.keymap[term::key_ctrl('q')] = [](void*) { os::exit_ok(); };
+    editor::set_keymap(Key::Code::CtrlQ, [](void*) { os::exit_ok(); });
 }
 
 static void handle_resize()

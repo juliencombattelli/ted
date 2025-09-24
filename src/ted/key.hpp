@@ -8,6 +8,32 @@ namespace ted {
 struct Key {
     enum Code : uint16_t {
         // All ascii scancode are before 256
+        CtrlA = 1,
+        CtrlB,
+        CtrlC,
+        CtrlD,
+        CtrlE,
+        CtrlF,
+        CtrlG,
+        CtrlH,
+        CtrlI,
+        CtrlJ,
+        CtrlK,
+        CtrlL,
+        CtrlM,
+        CtrlN,
+        CtrlO,
+        CtrlP,
+        CtrlQ,
+        CtrlR,
+        CtrlS,
+        CtrlT,
+        CtrlU,
+        CtrlV,
+        CtrlW,
+        CtrlX,
+        CtrlY,
+        CtrlZ,
 
         // The values up to 512 are following the ncurses numbering scheme
         Break = 257,

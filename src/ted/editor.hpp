@@ -45,6 +45,8 @@ void cursor_down();
 void cursor_left();
 void cursor_right();
 
+void set_keymap(Key::Code keycode, KeyHandler* handler);
+
 } // namespace ted::editor
 
 #endif // TED_EDITOR_HPP_

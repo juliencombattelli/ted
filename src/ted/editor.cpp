@@ -52,4 +52,9 @@ void cursor_right()
     }
 }
 
+void set_keymap(Key::Code keycode, KeyHandler* handler)
+{
+    state.keymap[keycode] = handler;
+}
+
 } // namespace ted::editor
