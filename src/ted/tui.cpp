@@ -121,6 +121,7 @@ static constexpr std::string_view welcome_message[] {
     "hit  CTRL+S     to save",
 };
 
+[[nodiscard]]
 static bool can_draw_welcome_message()
 {
     static constexpr auto project_length
@@ -136,6 +137,7 @@ static bool can_draw_welcome_message()
         && line_count < editor::state.screen_rows;
 }
 
+[[nodiscard]]
 static bool should_draw_welcome_message(size_t current_row)
 {
     size_t start_line = (editor::state.screen_rows - size(welcome_message)) / 2;
