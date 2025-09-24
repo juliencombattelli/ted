@@ -4,10 +4,12 @@
 #include <ted/term.hpp>
 #include <ted/tui.hpp>
 
+#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <climits>
 #include <cstdio>
+#include <format>
 
 namespace ted::tui {
 
@@ -78,23 +80,87 @@ static void load_default_tui_keymap()
     editor::state.keymap[term::key_ctrl('q')] = [](void*) { os::exit_ok(); };
 }
 
+static void handle_resize()
+{
+    // Handle window resizing
+    size_t rows = 0;
+    size_t cols = 0;
+    if (!term::get_size(rows, cols)) {
+        // TODO fallback to escape sequence computing
+        os::exit_err("ted::term::get_size() failed");
+    }
+    if (rows != editor::state.screen_rows
+        || cols != editor::state.screen_cols) {
+        editor::state.screen_rows = rows;
+        editor::state.screen_cols = cols;
+        // TODO consider clearing the screen in case of artifacts on resize
+        // term::clear();
+    }
+}
+
 static void init()
 {
-    size_t rows = 0, cols = 0;
+    size_t rows = 0;
+    size_t cols = 0;
     term::init();
     if (!term::get_size(rows, cols)) {
-        // Fallback to escape sequence computing
+        // TODO fallback to escape sequence computing
         os::exit_err("ted::term::get_size() failed");
     }
     editor::init(rows, cols);
     load_default_tui_keymap();
 }
 
-static void draw_eob_chars(editor::State& state)
+static constexpr std::string_view welcome_message[] {
+    "Ted v" TED_VERSION,
+    "",
+    "Ted is an open source terminal editor",
+    "https://github.com/juliencombattelli/ted",
+    "",
+    "hit  CTRL+Q     to quit",
+    "hit  CTRL+S     to save",
+};
+
+static bool can_draw_welcome_message()
 {
-    char eob_char = state.eob_char;
-    for (int row = 0; row < state.screen_rows - 1; row++) {
+    static constexpr auto project_length
+        = [](const std::string_view& str) { return str.length(); };
+
+    static constexpr size_t longest_line_len
+        = std::ranges::max_element(welcome_message, {}, project_length)
+              ->length();
+
+    static constexpr size_t line_count = size(welcome_message);
+
+    return longest_line_len < editor::state.screen_cols - 1 // EOB char
+        && line_count < editor::state.screen_rows;
+}
+
+static bool should_draw_welcome_message(size_t current_row)
+{
+    size_t start_line = (editor::state.screen_rows - size(welcome_message)) / 2;
+    size_t end_line = (editor::state.screen_rows + size(welcome_message)) / 2;
+    return start_line <= current_row && current_row <= end_line;
+}
+
+static void draw_welcome_message(size_t welcome_message_line)
+{
+    std::string line = std::format(
+        "{:^{}}",
+        welcome_message[welcome_message_line],
+        editor::state.screen_cols - 1);
+    editor::screen_buffer_append(line.c_str());
+}
+
+static void draw_eob_chars()
+{
+    char eob_char = editor::state.eob_char;
+    size_t welcome_message_line = 0;
+    for (int row = 0; row < editor::state.screen_rows - 1; row++) {
         editor::screen_buffer_append(eob_char);
+        if (can_draw_welcome_message() && should_draw_welcome_message(row)) {
+            draw_welcome_message(welcome_message_line++);
+        }
         term::erase_line();
         editor::screen_buffer_append("\r\n");
     }
@@ -104,10 +170,12 @@ static void draw_eob_chars(editor::State& state)
 
 static void refresh_screen()
 {
+    handle_resize();
+
     term::cursor_hide();
     term::cursor_home();
 
-    draw_eob_chars(editor::state);
+    draw_eob_chars();
 
     term::cursor_move(editor::state.cursor_row, editor::state.cursor_col);
     term::cursor_show();

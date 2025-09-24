@@ -1,0 +1,7 @@
+#ifndef TED_UTILS_HPP_
+#define TED_UTILS_HPP_
+
+#define TED_STRINGIFY_VALUE_OF(x) TED_STRINGIFY(x)
+#define TED_STRINGIFY(x) #x
+
+#endif // TED_UTILS_HPP_
