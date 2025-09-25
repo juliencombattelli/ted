@@ -176,6 +176,7 @@ static constexpr std::string_view welcome_message[] {
     "",
     "hit  CTRL+Q     to quit",
     "hit  CTRL+S     to save",
+    // TODO format keybinds depending on current config
 };
 
 [[nodiscard]]
@@ -232,6 +233,7 @@ static void refresh_screen()
     handle_resize();
 
     term::cursor_hide();
+    // TODO is this really needed?
     term::cursor_home();
 
     size_t eob_row = 0;
