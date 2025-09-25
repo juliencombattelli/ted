@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <cstdlib>
+#include <format>
 
 namespace ted::os {
 
@@ -30,10 +31,23 @@ enum class Ring {
 };
 void at_exit(Ring ring, void (*handler)());
 
+// Terminate the program with a success status
 [[noreturn]]
 void exit_ok();
+
+// Display an error message and terminate the program with a failure status
 [[noreturn]]
 void exit_err(const char* msg);
+
+// Display a formatted error message and terminate the program with a failure
+// status
+template<class... Args>
+[[noreturn]]
+void exit_err_format(std::format_string<Args...> fmt, Args&&... args)
+{
+    std::string msg = std::format(fmt, std::forward<Args>(args)...);
+    exit_err(msg.c_str());
+}
 
 [[nodiscard]]
 bool isatty(FILE* stream);

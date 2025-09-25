@@ -3,6 +3,8 @@
 #include <ted/term.hpp>
 #include <ted/tui.hpp>
 
+#include <fstream>
+
 namespace ted::editor {
 
 State state;
@@ -88,6 +90,21 @@ KeyHandler* get_keymap(Key::Code keycode)
 void open_new_file()
 {
     state.viewed_file = &state.opened_files.emplace_back();
+    // TODO handle newline type depending on settings
+    state.viewed_file->lines.emplace_back("\r\n");
+}
+void open_file(const char* path)
+{
+    state.viewed_file = &state.opened_files.emplace_back();
+
+    std::fstream file(path);
+    if (!file.is_open()) {
+        os::exit_err_format("Cannot open file {}", path);
+    }
+
+    for (std::string line; std::getline(file, line);) {
+        state.viewed_file->lines.emplace_back(line);
+    }
 }
 
 } // namespace ted::editor

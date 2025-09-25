@@ -25,11 +25,6 @@ using KeyHandler = void(void* userdata);
 using KeyMap = std::array<KeyHandler*, std::to_underlying(Key::Count)>;
 
 struct File {
-    File()
-    {
-        // TODO handle newline type depending on settings
-        lines.emplace_back("\n");
-    }
     std::vector<std::string> lines;
 };
 
@@ -70,6 +65,7 @@ void set_keymap(Key::Code keycode, KeyHandler* handler);
 KeyHandler* get_keymap(Key::Code keycode);
 
 void open_new_file();
+void open_file(const char* path);
 
 } // namespace ted::editor
 
