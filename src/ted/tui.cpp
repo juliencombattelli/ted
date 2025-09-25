@@ -198,6 +198,18 @@ static bool can_draw_welcome_message()
 [[nodiscard]]
 static bool should_draw_welcome_message(size_t current_row)
 {
+    if (!can_draw_welcome_message()) {
+        return false;
+    }
+
+    if (editor::state.viewed_file->lines.size() > 1) {
+        return false;
+    }
+
+    if (editor::state.viewed_file->lines[0].length() > 2) {
+        return false;
+    }
+
     size_t start_line = (editor::get_screen_rows() - size(welcome_message)) / 2;
     size_t end_line = (editor::get_screen_rows() + size(welcome_message)) / 2;
     return start_line <= current_row && current_row <= end_line;
@@ -218,7 +230,7 @@ static void draw_eob_chars(size_t eob_row)
     size_t welcome_message_line = 0;
     for (size_t row = eob_row; row < editor::get_screen_rows() - 1; row++) {
         editor::screen_buffer_append(eob_char);
-        if (can_draw_welcome_message() && should_draw_welcome_message(row)) {
+        if (should_draw_welcome_message(row)) {
             draw_welcome_message(welcome_message_line++);
         }
         term::erase_line();
