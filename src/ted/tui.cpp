@@ -217,6 +217,13 @@ static bool should_draw_welcome_message(size_t current_row)
 
 static void draw_welcome_message(size_t welcome_message_line)
 {
+    if (welcome_message_line >= size(welcome_message)) {
+        os::exit_err_format(
+            "draw_welcome_message(): out of bound access, welcome_message_line "
+            "[{}] >= size(welcome_message) [{}] ",
+            welcome_message_line,
+            size(welcome_message));
+    }
     std::string line = std::format(
         "{:^{}}",
         welcome_message[welcome_message_line],
