@@ -217,6 +217,9 @@ static bool should_draw_welcome_message(size_t current_row)
 
 static void draw_welcome_message(size_t welcome_message_line)
 {
+    if (welcome_message_line >= size(welcome_message)) {
+        return;
+    }
     std::string line = std::format(
         "{:^{}}",
         welcome_message[welcome_message_line],
