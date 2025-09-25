@@ -192,7 +192,7 @@ static bool can_draw_welcome_message()
     static constexpr size_t line_count = size(welcome_message);
 
     return longest_line_len < editor::get_screen_cols() - 1 // EOB char
-        && line_count < editor::get_screen_rows();
+        && line_count < editor::get_screen_rows() - 1; // Empty first line
 }
 
 [[nodiscard]]
