@@ -32,7 +32,7 @@ void cursor_up()
 }
 void cursor_down()
 {
-    if (state.cursor_row < state.screen_size.rows) {
+    if (state.cursor_row < state.screen_size.rows - 1) {
         state.cursor_row++;
     }
 }
@@ -44,7 +44,7 @@ void cursor_left()
 }
 void cursor_right()
 {
-    if (state.cursor_col < state.screen_size.cols) {
+    if (state.cursor_col < state.screen_size.cols - 1) {
         state.cursor_col++;
     }
 }
