@@ -9,7 +9,7 @@
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
-#include <string>
+#include <cstring>
 
 namespace ted::term {
 
@@ -76,12 +76,15 @@ bool read_key(uint8_t& byte)
     return true;
 }
 
-void write_screen_buffer()
+void print_n(const void* buffer, size_t size)
 {
-    std::string& screen_buffer = editor::state.screen_buffer;
     // TODO handle error
-    (void)::write(STDOUT_FILENO, screen_buffer.data(), screen_buffer.length());
-    screen_buffer.clear();
+    (void)::write(STDOUT_FILENO, buffer, size);
+}
+
+void print_cstr(const char* str)
+{
+    print_n(str, std::strlen(str));
 }
 
 } // namespace ted::term

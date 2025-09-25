@@ -45,7 +45,8 @@ constexpr char key_ctrl(char key)
 [[nodiscard]]
 bool read_key(uint8_t& byte);
 
-void write_screen_buffer();
+void print_n(const void* buffer, size_t size);
+void print_cstr(const char* str);
 
 } // namespace ted::term
 

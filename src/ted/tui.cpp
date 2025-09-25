@@ -243,6 +243,13 @@ static void draw_eob_chars(size_t eob_row)
     term::erase_line();
 }
 
+static void write_screen_buffer()
+{
+    std::string& screen_buffer = editor::state.screen_buffer;
+    term::print_n(screen_buffer.data(), screen_buffer.length());
+    screen_buffer.clear();
+}
+
 static void refresh_screen()
 {
     handle_resize();
@@ -266,7 +273,7 @@ static void refresh_screen()
     term::cursor_move(editor::state.cursor_row, editor::state.cursor_col);
     term::cursor_show();
 
-    term::write_screen_buffer();
+    write_screen_buffer();
 }
 
 void start()

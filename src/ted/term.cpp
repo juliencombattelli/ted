@@ -89,14 +89,16 @@ void clear()
 
 void enter_main_screen_buffer()
 {
+    static constexpr const char code[] = "\e[?1049l";
     // Send code right away
-    std::puts("\e[?1049l");
+    print_n(code, sizeof(code) - 1);
 }
 
 void enter_alternate_screen_buffer()
 {
+    static constexpr const char code[] = "\e[?1049h";
     // Send code right away
-    std::puts("\e[?1049h");
+    print_n(code, sizeof(code) - 1);
 }
 
 } // namespace ted::term
