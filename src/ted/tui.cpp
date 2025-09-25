@@ -263,6 +263,7 @@ static void refresh_screen()
         editor::File& file = *editor::state.viewed_file;
         for (const auto& line : file.lines) {
             editor::screen_buffer_append(line.c_str());
+            term::erase_line();
             editor::screen_buffer_append("\r\n");
         }
         eob_row = file.lines.size();
