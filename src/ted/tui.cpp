@@ -211,15 +211,12 @@ static bool should_draw_welcome_message(size_t current_row)
     }
 
     size_t start_line = (editor::get_screen_rows() - size(welcome_message)) / 2;
-    size_t end_line = (editor::get_screen_rows() + size(welcome_message)) / 2;
-    return start_line <= current_row && current_row <= end_line;
+    size_t end_line = start_line + size(welcome_message);
+    return start_line <= current_row && current_row < end_line;
 }
 
 static void draw_welcome_message(size_t welcome_message_line)
 {
-    if (welcome_message_line >= size(welcome_message)) {
-        return;
-    }
     std::string line = std::format(
         "{:^{}}",
         welcome_message[welcome_message_line],
