@@ -56,6 +56,9 @@ void init();
 void screen_buffer_append(char c);
 void screen_buffer_append(const char* s);
 
+void scroll_vertically();
+void scroll_horizontally();
+
 void cursor_up();
 void cursor_down();
 void cursor_left();

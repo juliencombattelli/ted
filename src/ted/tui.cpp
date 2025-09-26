@@ -234,12 +234,18 @@ static void draw_welcome_message(size_t welcome_message_line)
 static size_t draw_file()
 {
     editor::File& file = *editor::state.viewed_file;
-    size_t end_of_file_on_screen
-        = std::min(file.lines.size(), editor::get_screen_rows());
+    size_t end_of_file_on_screen = std::min(
+        file.lines.size(),
+        editor::state.viewport_offset.row + editor::get_screen_rows());
     // TODO create a span of lines
     for (size_t row = editor::state.viewport_offset.row;
          row < end_of_file_on_screen;
          row++) {
+        fprintf(
+            stderr,
+            "printing line %zu: `%s`\n",
+            row,
+            file.lines[row].c_str());
         editor::screen_buffer_append(file.lines[row].c_str());
         term::erase_line();
         // Print last line without EOL
@@ -276,6 +282,8 @@ static void write_screen_buffer()
 
 static void refresh_screen()
 {
+    editor::scroll_vertically();
+
     term::cursor_hide();
     term::cursor_home();
 
@@ -288,7 +296,9 @@ static void refresh_screen()
         draw_eob_chars(eob_row);
     }
 
-    term::cursor_move(editor::get_cursor_row(), editor::get_cursor_col());
+    term::cursor_move(
+        editor::get_cursor_row() - editor::state.viewport_offset.row,
+        editor::get_cursor_col());
     term::cursor_show();
 
     write_screen_buffer();

@@ -26,6 +26,27 @@ void screen_buffer_append(const char* s)
     state.screen_buffer.append(s);
 }
 
+void scroll_vertically()
+{
+    auto& viewport_row = editor::state.viewport_offset.row;
+
+    // fprintf(
+    //     stderr,
+    //     "cursor_row=%zu, viewport_row_bot=%zu\n",
+    //     editor::get_cursor_row(),
+    //     viewport_row + editor::get_screen_rows());
+
+    if (editor::get_cursor_row() < viewport_row) {
+        viewport_row = editor::get_cursor_row();
+    }
+    if (editor::get_cursor_row() >= viewport_row + editor::get_screen_rows()) {
+        viewport_row = editor::get_cursor_row() - editor::get_screen_rows() + 1;
+    }
+}
+void scroll_horizontally()
+{
+}
+
 void cursor_up()
 {
     if (state.cursor_coord.row > 0) {
@@ -34,7 +55,7 @@ void cursor_up()
 }
 void cursor_down()
 {
-    if (state.cursor_coord.row < state.screen_size.rows - 1) {
+    if (state.cursor_coord.row < state.viewed_file->lines.size()) {
         state.cursor_coord.row++;
     }
 }
