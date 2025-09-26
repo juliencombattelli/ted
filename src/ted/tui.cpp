@@ -231,6 +231,17 @@ static void draw_welcome_message(size_t welcome_message_line)
     editor::screen_buffer_append(line.c_str());
 }
 
+static size_t draw_file()
+{
+    editor::File& file = *editor::state.viewed_file;
+    for (const auto& line : file.lines) {
+        editor::screen_buffer_append(line.c_str());
+        term::erase_line();
+        editor::screen_buffer_append("\r\n");
+    }
+    return file.lines.size();
+}
+
 static void draw_eob_chars(size_t eob_row)
 {
     char eob_char = editor::state.eob_char;
@@ -263,13 +274,7 @@ static void refresh_screen()
 
     size_t eob_row = 0;
     if (editor::state.viewed_file != nullptr) {
-        editor::File& file = *editor::state.viewed_file;
-        for (const auto& line : file.lines) {
-            editor::screen_buffer_append(line.c_str());
-            term::erase_line();
-            editor::screen_buffer_append("\r\n");
-        }
-        eob_row = file.lines.size();
+        eob_row = draw_file();
     }
 
     draw_eob_chars(eob_row);
