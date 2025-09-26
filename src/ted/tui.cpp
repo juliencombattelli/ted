@@ -276,8 +276,6 @@ static void write_screen_buffer()
 
 static void refresh_screen()
 {
-    handle_resize();
-
     term::cursor_hide();
     term::cursor_home();
 
