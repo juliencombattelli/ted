@@ -10,6 +10,7 @@
 
 struct Arguments {
     std::vector<std::string> files;
+    bool debug;
 };
 
 static void usage()
@@ -19,9 +20,10 @@ Usage:
     ted [options] [file ...]
 
 Options:
-    --      All arguments after this will be interpreted as files to open
+    --debug, -d     Enable debug information printing into stderr
+    --              All arguments after this will be interpreted as files to open
 )";
-    // TODO add -d, --display-mode {tui,gui}
+    // TODO add -i, --interface {tui,gui}
     (void)std::fputs(usage_message, stderr);
 }
 
@@ -33,6 +35,8 @@ static Arguments parse_arguments(std::span<char*> args)
         if (arg.starts_with('-') && !swallow_remaining_as_files) {
             if (arg == "--") {
                 swallow_remaining_as_files = true;
+            } else if (arg == "-d" || arg == "--debug") {
+                arguments.debug = true;
             } else {
                 usage();
                 std::exit(EXIT_FAILURE);
@@ -47,6 +51,10 @@ static Arguments parse_arguments(std::span<char*> args)
 int main(int argc, char* argv[])
 {
     Arguments args = parse_arguments(std::span(argv, argc));
+
+    if (args.debug) {
+        ted::os::print_source_location_at_exit(true);
+    }
 
     if (!ted::os::isatty(stdin) || !ted::os::isatty(stdout)) {
         std::fprintf(stderr, "not a tty\n");
