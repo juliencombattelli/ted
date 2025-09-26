@@ -234,10 +234,18 @@ static void draw_welcome_message(size_t welcome_message_line)
 static size_t draw_file()
 {
     editor::File& file = *editor::state.viewed_file;
-    for (const auto& line : file.lines) {
-        editor::screen_buffer_append(line.c_str());
+    size_t end_of_file_on_screen
+        = std::min(file.lines.size(), editor::get_screen_rows());
+    // TODO create a span of lines
+    for (size_t row = editor::state.viewport_offset.row;
+         row < end_of_file_on_screen;
+         row++) {
+        editor::screen_buffer_append(file.lines[row].c_str());
         term::erase_line();
-        editor::screen_buffer_append("\r\n");
+        // Print last line without EOL
+        if (row < editor::get_screen_rows() - 1) {
+            editor::screen_buffer_append("\r\n");
+        }
     }
     return file.lines.size();
 }
@@ -246,16 +254,17 @@ static void draw_eob_chars(size_t eob_row)
 {
     char eob_char = editor::state.eob_char;
     size_t welcome_message_line = 0;
-    for (size_t row = eob_row; row < editor::get_screen_rows() - 1; row++) {
+    for (size_t row = eob_row; row < editor::get_screen_rows(); row++) {
         editor::screen_buffer_append(eob_char);
         if (should_draw_welcome_message(row)) {
             draw_welcome_message(welcome_message_line++);
         }
         term::erase_line();
-        editor::screen_buffer_append("\r\n");
+        // Print last line without EOL
+        if (row < editor::get_screen_rows() - 1) {
+            editor::screen_buffer_append("\r\n");
+        }
     }
-    editor::screen_buffer_append(eob_char);
-    term::erase_line();
 }
 
 static void write_screen_buffer()
@@ -277,7 +286,9 @@ static void refresh_screen()
         eob_row = draw_file();
     }
 
-    draw_eob_chars(eob_row);
+    if (eob_row < editor::get_screen_rows()) {
+        draw_eob_chars(eob_row);
+    }
 
     term::cursor_move(editor::get_cursor_row(), editor::get_cursor_col());
     term::cursor_show();
