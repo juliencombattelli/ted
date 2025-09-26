@@ -21,10 +21,16 @@ static void usage()
 Options:
     --debug, -d     Enable debug information printing into stderr
     --help, -h      Print this help message
+    --version, -v   Print version information
     --              All arguments after this will be interpreted as files to open
 )";
     // TODO add -i, --interface {tui,gui}
-    (void)std::fputs(usage_message, stderr);
+    (void)std::fputs(usage_message, stdout);
+}
+
+static void version()
+{
+    (void)std::fputs("Ted v" TED_VERSION "\n", stderr);
 }
 
 static Arguments parse_arguments(std::span<char*> args)
@@ -39,6 +45,9 @@ static Arguments parse_arguments(std::span<char*> args)
                 arguments.debug = true;
             } else if (arg == "-h" || arg == "--help") {
                 usage();
+                std::exit(EXIT_SUCCESS);
+            } else if (arg == "-v" || arg == "--version") {
+                version();
                 std::exit(EXIT_SUCCESS);
             } else {
                 usage();
