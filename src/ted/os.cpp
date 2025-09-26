@@ -1,3 +1,4 @@
+#include <source_location>
 #include <ted/os.hpp>
 #include <ted/term.hpp>
 
@@ -86,15 +87,24 @@ static void at_exit_ring0(void (*handler)())
     at_exit_registry.exit_handlers[0].push_back(handler);
 }
 
-void exit_ok()
+void exit_ok(std::source_location /*srcloc*/)
 {
+    // TODO print source location if required
     std::exit(EXIT_SUCCESS);
 }
 
-void exit_err(const char* msg)
+void exit_err(const char* msg, std::source_location srcloc)
 {
     static const char* exit_message = msg;
-    at_exit_ring0([] { std::perror(exit_message); });
+    static std::source_location source_location = srcloc;
+    at_exit_ring0([] {
+        (void)std::fprintf(
+            stderr,
+            "%s:%u: ",
+            source_location.file_name(),
+            source_location.line());
+        std::perror(exit_message);
+    });
     std::exit(EXIT_FAILURE);
 }
 

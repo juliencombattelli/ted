@@ -1,9 +1,12 @@
 #ifndef TED_OS_HPP_
 #define TED_OS_HPP_
 
+#include <ted/utils.hpp>
+
 #include <cstdio>
 #include <cstdlib>
 #include <format>
+#include <source_location>
 
 namespace ted::os {
 
@@ -33,20 +36,23 @@ void at_exit(Ring ring, void (*handler)());
 
 // Terminate the program with a success status
 [[noreturn]]
-void exit_ok();
+void exit_ok(std::source_location srcloc = std::source_location::current());
 
 // Display an error message and terminate the program with a failure status
 [[noreturn]]
-void exit_err(const char* msg);
+void exit_err(
+    const char* msg,
+    std::source_location srcloc = std::source_location::current());
 
 // Display a formatted error message and terminate the program with a failure
 // status
 template<class... Args>
 [[noreturn]]
-void exit_err_format(std::format_string<Args...> fmt, Args&&... args)
+void exit_err_format(utils::Fmt fmt, Args&&... args)
 {
-    std::string msg = std::format(fmt, std::forward<Args>(args)...);
-    exit_err(msg.c_str());
+    std::string msg
+        = std::format(fmt.get<Args...>(), std::forward<Args>(args)...);
+    exit_err(msg.c_str(), fmt.source_location);
 }
 
 [[nodiscard]]
