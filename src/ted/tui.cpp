@@ -122,10 +122,10 @@ static void load_default_tui_keymap()
     });
 
     editor::set_keymap(Key::Code::Home, [](void*) {
-        editor::state.cursor_col = 0;
+        editor::set_cursor_col_left();
     });
     editor::set_keymap(Key::Code::End, [](void*) {
-        editor::state.cursor_col = editor::get_screen_cols() - 1;
+        editor::set_cursor_col_right();
     });
 
     editor::set_keymap(Key::Code { '\r' }, [](void*) {
@@ -275,7 +275,7 @@ static void refresh_screen()
 
     draw_eob_chars(eob_row);
 
-    term::cursor_move(editor::state.cursor_row, editor::state.cursor_col);
+    term::cursor_move(editor::get_cursor_row(), editor::get_cursor_col());
     term::cursor_show();
 
     write_screen_buffer();

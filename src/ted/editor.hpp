@@ -33,13 +33,17 @@ struct ScreenSize {
     size_t cols {};
 };
 
+struct Coord {
+    size_t row {};
+    size_t col {};
+};
+
 struct State {
     std::vector<File> opened_files;
     File* viewed_file;
     std::string screen_buffer;
     ScreenSize screen_size;
-    size_t cursor_row = 0;
-    size_t cursor_col = 0;
+    Coord cursor_coord;
     char eob_char;
     KeyMap keymap;
 };
@@ -55,6 +59,16 @@ void cursor_up();
 void cursor_down();
 void cursor_left();
 void cursor_right();
+
+void set_cursor_row(size_t row);
+void set_cursor_row_top();
+void set_cursor_row_bot();
+size_t get_cursor_row();
+
+void set_cursor_col(size_t col);
+void set_cursor_col_left();
+void set_cursor_col_right();
+size_t get_cursor_col();
 
 void set_screen_rows(size_t rows);
 size_t get_screen_rows();

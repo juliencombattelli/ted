@@ -28,27 +28,61 @@ void screen_buffer_append(const char* s)
 
 void cursor_up()
 {
-    if (state.cursor_row > 0) {
-        state.cursor_row--;
+    if (state.cursor_coord.row > 0) {
+        state.cursor_coord.row--;
     }
 }
 void cursor_down()
 {
-    if (state.cursor_row < state.screen_size.rows - 1) {
-        state.cursor_row++;
+    if (state.cursor_coord.row < state.screen_size.rows - 1) {
+        state.cursor_coord.row++;
     }
 }
 void cursor_left()
 {
-    if (state.cursor_col > 0) {
-        state.cursor_col--;
+    if (state.cursor_coord.col > 0) {
+        state.cursor_coord.col--;
     }
 }
 void cursor_right()
 {
-    if (state.cursor_col < state.screen_size.cols - 1) {
-        state.cursor_col++;
+    if (state.cursor_coord.col < state.screen_size.cols - 1) {
+        state.cursor_coord.col++;
     }
+}
+
+void set_cursor_row(size_t row)
+{
+    state.cursor_coord.row = std::min(row, state.screen_size.rows - 1);
+}
+void set_cursor_row_top()
+{
+    state.cursor_coord.row = 0;
+}
+void set_cursor_row_bot()
+{
+    state.cursor_coord.row = state.screen_size.rows - 1;
+}
+size_t get_cursor_row()
+{
+    return state.cursor_coord.row;
+}
+
+void set_cursor_col(size_t col)
+{
+    state.cursor_coord.col = std::min(col, state.screen_size.cols - 1);
+}
+void set_cursor_col_left()
+{
+    state.cursor_coord.col = 0;
+}
+void set_cursor_col_right()
+{
+    state.cursor_coord.col = state.screen_size.cols - 1;
+}
+size_t get_cursor_col()
+{
+    return state.cursor_coord.col;
 }
 
 void set_screen_size(ScreenSize screen_size)
