@@ -259,7 +259,6 @@ static void refresh_screen()
     handle_resize();
 
     term::cursor_hide();
-    // TODO is this really needed?
     term::cursor_home();
 
     size_t eob_row = 0;
