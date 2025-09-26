@@ -135,7 +135,7 @@ static void load_default_tui_keymap()
     editor::set_keymap(Key::Code::CtrlQ, [](void*) { os::exit_ok(); });
 }
 
-static void handle_resize()
+void handle_resize()
 {
     // Handle window resizing
     size_t rows = 0;

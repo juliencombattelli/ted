@@ -7,6 +7,8 @@ void init();
 
 void start();
 
+void handle_resize();
+
 } // namespace ted::tui
 
 #endif // TED_TUI_HPP_
