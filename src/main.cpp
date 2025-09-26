@@ -15,12 +15,12 @@ struct Arguments {
 
 static void usage()
 {
-    static constexpr char usage_message[] = R"(
-Usage:
+    static constexpr char usage_message[] = R"(Usage:
     ted [options] [file ...]
 
 Options:
     --debug, -d     Enable debug information printing into stderr
+    --help, -h      Print this help message
     --              All arguments after this will be interpreted as files to open
 )";
     // TODO add -i, --interface {tui,gui}
@@ -37,6 +37,9 @@ static Arguments parse_arguments(std::span<char*> args)
                 swallow_remaining_as_files = true;
             } else if (arg == "-d" || arg == "--debug") {
                 arguments.debug = true;
+            } else if (arg == "-h" || arg == "--help") {
+                usage();
+                std::exit(EXIT_SUCCESS);
             } else {
                 usage();
                 std::exit(EXIT_FAILURE);
