@@ -35,7 +35,7 @@ static void version()
 
 static Arguments parse_arguments(std::span<char*> args)
 {
-    Arguments arguments;
+    Arguments arguments {};
     bool swallow_remaining_as_files = false;
     for (std::string_view arg : args.subspan(1)) {
         if (arg.starts_with('-') && !swallow_remaining_as_files) {
