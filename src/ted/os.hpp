@@ -55,6 +55,9 @@ void exit_err_format(utils::Fmt fmt, Args&&... args)
     exit_err(msg.c_str(), fmt.source_location);
 }
 
+// Prepend the source location before the exit message
+void print_source_location_at_exit(bool do_print_source_location);
+
 [[nodiscard]]
 bool isatty(FILE* stream);
 

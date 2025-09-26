@@ -3,6 +3,7 @@
 #include <ted/term.hpp>
 
 #include <array>
+#include <atomic>
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
@@ -87,9 +88,31 @@ static void at_exit_ring0(void (*handler)())
     at_exit_registry.exit_handlers[0].push_back(handler);
 }
 
-void exit_ok(std::source_location /*srcloc*/)
+static std::atomic_bool must_print_source_location = false;
+
+void print_source_location_at_exit(bool do_print_source_location)
 {
-    // TODO print source location if required
+    must_print_source_location = do_print_source_location;
+}
+
+static void print_source_location(std::source_location source_location)
+{
+    (void)std::fprintf(
+        stderr,
+        "%s:%u: ",
+        source_location.file_name(),
+        source_location.line());
+}
+
+void exit_ok(std::source_location srcloc)
+{
+    if (must_print_source_location) {
+        static std::source_location source_location = srcloc;
+        at_exit_ring0([] {
+            print_source_location(source_location);
+            std::perror("");
+        });
+    }
     std::exit(EXIT_SUCCESS);
 }
 
@@ -98,11 +121,9 @@ void exit_err(const char* msg, std::source_location srcloc)
     static const char* exit_message = msg;
     static std::source_location source_location = srcloc;
     at_exit_ring0([] {
-        (void)std::fprintf(
-            stderr,
-            "%s:%u: ",
-            source_location.file_name(),
-            source_location.line());
+        if (must_print_source_location) {
+            print_source_location(source_location);
+        }
         std::perror(exit_message);
     });
     std::exit(EXIT_FAILURE);
