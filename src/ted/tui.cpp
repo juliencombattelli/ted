@@ -122,10 +122,16 @@ static void load_default_tui_keymap()
     });
 
     editor::set_keymap(Key::Code::Home, [](void*) {
-        editor::set_cursor_col_left();
+        size_t times = editor::get_screen_cols();
+        while (times--) {
+            editor::cursor_left();
+        }
     });
     editor::set_keymap(Key::Code::End, [](void*) {
-        editor::set_cursor_col_right();
+        size_t times = editor::get_screen_cols();
+        while (times--) {
+            editor::cursor_right();
+        }
     });
 
     editor::set_keymap(Key::Code { '\r' }, [](void*) {
