@@ -49,29 +49,50 @@ void scroll()
     }
 }
 
+// TODO consider using std::optional
+static std::string* get_cursor_text_line()
+{
+    if (state.cursor_coord.row >= state.viewed_file->lines.size()) {
+        return nullptr;
+    }
+    return &state.viewed_file->lines[state.cursor_coord.row];
+}
+
+static void fixup_cursor_col()
+{
+    auto* cursor_line = get_cursor_text_line();
+    size_t rowlen = cursor_line ? cursor_line->size() : 0;
+    state.cursor_coord.col = std::min(state.cursor_coord.col, rowlen);
+}
+
 void cursor_up()
 {
     if (state.cursor_coord.row > 0) {
         state.cursor_coord.row--;
     }
+    fixup_cursor_col();
 }
 void cursor_down()
 {
     if (state.cursor_coord.row < state.viewed_file->lines.size() - 1) {
         state.cursor_coord.row++;
     }
+    fixup_cursor_col();
 }
 void cursor_left()
 {
     if (state.cursor_coord.col > 0) {
         state.cursor_coord.col--;
     }
+    fixup_cursor_col();
 }
 void cursor_right()
 {
-    // if (state.cursor_coord.col < state.screen_size.cols - 1) {
-    state.cursor_coord.col++;
-    // }
+    auto* cursor_line = get_cursor_text_line();
+    if (cursor_line && state.cursor_coord.col < cursor_line->size()) {
+        state.cursor_coord.col++;
+    }
+    fixup_cursor_col();
 }
 
 void set_cursor_row(size_t row)
