@@ -97,7 +97,7 @@ static void process_key(Key::Code keycode)
         key_handler(nullptr);
     } else {
         // TODO if visible char only
-        editor::screen_buffer_append(keycode);
+        editor::screen_buffer_append_char(keycode);
     }
 }
 
@@ -242,9 +242,18 @@ static void draw_lines()
     for (size_t row = 0; row < editor::get_screen_rows(); row++) {
         size_t line_index = row + editor::state.viewport_offset.row;
         if (line_index < file->lines.size()) {
-            editor::screen_buffer_append(file->lines[line_index].c_str());
+            ssize_t display_len = (ssize_t)file->lines[line_index].size()
+                - editor::state.viewport_offset.col;
+            display_len = std::clamp<ssize_t>(
+                display_len,
+                0,
+                editor::get_screen_cols());
+            const char* start_of_line
+                = &file->lines[line_index]
+                       .data()[editor::state.viewport_offset.col];
+            editor::screen_buffer_append_n(start_of_line, display_len);
         } else {
-            editor::screen_buffer_append(eob_char);
+            editor::screen_buffer_append_char(eob_char);
             if (should_draw_welcome_message(row)) {
                 draw_welcome_message(welcome_message_line++);
             }
@@ -266,7 +275,7 @@ static void write_screen_buffer()
 
 static void refresh_screen()
 {
-    editor::scroll_vertically();
+    editor::scroll();
 
     term::cursor_hide();
     term::cursor_home();
@@ -275,7 +284,7 @@ static void refresh_screen()
 
     term::cursor_move(
         editor::get_cursor_row() - editor::state.viewport_offset.row,
-        editor::get_cursor_col());
+        editor::get_cursor_col() - editor::state.viewport_offset.col);
     term::cursor_show();
 
     write_screen_buffer();

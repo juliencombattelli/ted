@@ -17,7 +17,7 @@ void init()
     // between a TUI or GUI mode
 }
 
-void screen_buffer_append(char c)
+void screen_buffer_append_char(char c)
 {
     state.screen_buffer.push_back(c);
 }
@@ -25,10 +25,15 @@ void screen_buffer_append(const char* s)
 {
     state.screen_buffer.append(s);
 }
+void screen_buffer_append_n(const char* s, size_t n)
+{
+    state.screen_buffer.append(s, n);
+}
 
-void scroll_vertically()
+void scroll()
 {
     auto& viewport_row = editor::state.viewport_offset.row;
+    auto& viewport_col = editor::state.viewport_offset.col;
 
     if (editor::get_cursor_row() < viewport_row) {
         viewport_row = editor::get_cursor_row();
@@ -36,9 +41,12 @@ void scroll_vertically()
     if (editor::get_cursor_row() >= viewport_row + editor::get_screen_rows()) {
         viewport_row = editor::get_cursor_row() - editor::get_screen_rows() + 1;
     }
-}
-void scroll_horizontally()
-{
+    if (editor::get_cursor_col() < viewport_col) {
+        viewport_col = editor::get_cursor_col();
+    }
+    if (editor::get_cursor_col() >= viewport_col + editor::get_screen_cols()) {
+        viewport_col = editor::get_cursor_col() - editor::get_screen_cols() + 1;
+    }
 }
 
 void cursor_up()
@@ -61,9 +69,9 @@ void cursor_left()
 }
 void cursor_right()
 {
-    if (state.cursor_coord.col < state.screen_size.cols - 1) {
-        state.cursor_coord.col++;
-    }
+    // if (state.cursor_coord.col < state.screen_size.cols - 1) {
+    state.cursor_coord.col++;
+    // }
 }
 
 void set_cursor_row(size_t row)
