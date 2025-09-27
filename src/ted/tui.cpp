@@ -240,6 +240,7 @@ static void draw_lines()
         os::exit_err("No viewed file, this should not happen");
     }
     for (size_t row = 0; row < editor::get_screen_rows(); row++) {
+        term::erase_line();
         size_t line_index = row + editor::state.viewport_offset.row;
         if (line_index < file->lines.size()) {
             ssize_t display_len = (ssize_t)file->lines[line_index].size()
@@ -258,7 +259,6 @@ static void draw_lines()
                 draw_welcome_message(welcome_message_line++);
             }
         }
-        term::erase_line();
         // Print last line without EOL
         if (row < editor::get_screen_rows() - 1) {
             editor::screen_buffer_append("\r\n");
