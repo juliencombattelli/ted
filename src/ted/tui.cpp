@@ -231,30 +231,23 @@ static void draw_welcome_message(size_t welcome_message_line)
     editor::screen_buffer_append(line.c_str());
 }
 
-static size_t draw_file()
-{
-    editor::File& file = *editor::state.viewed_file;
-    // TODO create a span of lines
-    for (size_t row = 0; row < editor::get_screen_rows(); row++) {
-        size_t line_index = row + editor::state.viewport_offset.row;
-        editor::screen_buffer_append(file.lines[line_index].c_str());
-        term::erase_line();
-        // Print last line without EOL
-        if (row < editor::get_screen_rows() - 1) {
-            editor::screen_buffer_append("\r\n");
-        }
-    }
-    return file.lines.size();
-}
-
-static void draw_eob_chars(size_t eob_row)
+static void draw_lines()
 {
     char eob_char = editor::state.eob_char;
     size_t welcome_message_line = 0;
-    for (size_t row = eob_row; row < editor::get_screen_rows(); row++) {
-        editor::screen_buffer_append(eob_char);
-        if (should_draw_welcome_message(row)) {
-            draw_welcome_message(welcome_message_line++);
+    editor::File* file = editor::state.viewed_file;
+    if (file == nullptr) {
+        os::exit_err("No viewed file, this should not happen");
+    }
+    for (size_t row = 0; row < editor::get_screen_rows(); row++) {
+        size_t line_index = row + editor::state.viewport_offset.row;
+        if (line_index < file->lines.size()) {
+            editor::screen_buffer_append(file->lines[line_index].c_str());
+        } else {
+            editor::screen_buffer_append(eob_char);
+            if (should_draw_welcome_message(row)) {
+                draw_welcome_message(welcome_message_line++);
+            }
         }
         term::erase_line();
         // Print last line without EOL
@@ -278,14 +271,7 @@ static void refresh_screen()
     term::cursor_hide();
     term::cursor_home();
 
-    size_t eob_row = 0;
-    if (editor::state.viewed_file != nullptr) {
-        eob_row = draw_file();
-    }
-
-    if (eob_row < editor::get_screen_rows()) {
-        draw_eob_chars(eob_row);
-    }
+    draw_lines();
 
     term::cursor_move(
         editor::get_cursor_row() - editor::state.viewport_offset.row,
