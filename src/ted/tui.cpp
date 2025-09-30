@@ -13,6 +13,8 @@
 
 namespace ted::tui {
 
+static bool keep_running = true;
+
 [[nodiscard]]
 static Key::Code read_escape_sequence()
 {
@@ -132,7 +134,7 @@ static void load_default_tui_keymap()
         editor::screen_buffer_append("\r\n");
     });
 
-    editor::set_keymap(Key::Code::CtrlQ, [](void*) { os::exit_ok(); });
+    editor::set_keymap(Key::Code::CtrlQ, [](void*) { keep_running = false; });
 }
 
 void handle_resize()
@@ -295,7 +297,7 @@ static void refresh_screen()
 
 void start()
 {
-    while (true) {
+    while (keep_running) {
         refresh_screen();
         Key::Code keycode = read_key();
         process_key(keycode);
