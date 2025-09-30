@@ -83,7 +83,7 @@ size_t strlen(State* state, std::string_view s)
         char_index++;
         byte_index = ubrk_next(it);
     }
-    return char_index;
+    return char_index - 1;
 }
 
 std::string_view substr(State* state, std::string_view s, size_t pos, size_t n)
