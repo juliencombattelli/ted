@@ -118,6 +118,23 @@ void cursor_right()
     }
     fixup_cursor_col();
 }
+void cursor_start_of_line()
+{
+    while (state.cursor_coord.col > 0) {
+        state.cursor_coord.col--;
+    }
+    fixup_cursor_col();
+}
+void cursor_end_of_line()
+{
+    auto* cursor_line = get_cursor_text_line();
+    if (cursor_line) {
+        while (state.cursor_coord.col < cursor_line->size()) {
+            state.cursor_coord.col++;
+        }
+    }
+    fixup_cursor_col();
+}
 
 void set_cursor_row(size_t row)
 {

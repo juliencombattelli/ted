@@ -66,6 +66,8 @@ void cursor_up();
 void cursor_down();
 void cursor_left();
 void cursor_right();
+void cursor_start_of_line();
+void cursor_end_of_line();
 
 void set_cursor_row(size_t row);
 void set_cursor_row_top();
