@@ -15,6 +15,7 @@
 
 namespace ted::tui {
 
+// NOLINTNEXTLINE(*global*)
 static bool keep_running = true;
 
 [[nodiscard]]

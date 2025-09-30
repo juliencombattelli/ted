@@ -4,10 +4,12 @@
 #include <ted/tui.hpp>
 #include <ted/utf8.hpp>
 
+#include <algorithm>
 #include <fstream>
 
 namespace ted::editor {
 
+// NOLINTNEXTLINE(*global*)
 State state;
 
 void dump_state()
@@ -31,7 +33,7 @@ void dump_state()
         state.cursor_coord.col,
         state.viewport_offset.row,
         state.viewport_offset.col);
-    file << std::endl;
+    file << "\n";
 }
 
 void init()
@@ -70,15 +72,14 @@ void scroll()
     auto& viewport_row = editor::state.viewport_offset.row;
     auto& viewport_col = editor::state.viewport_offset.col;
 
-    if (editor::get_cursor_row() < viewport_row) {
-        viewport_row = editor::get_cursor_row();
-    }
+    viewport_row = std::min(viewport_row, editor::get_cursor_row());
+
     if (editor::get_cursor_row() >= viewport_row + editor::get_screen_rows()) {
         viewport_row = editor::get_cursor_row() - editor::get_screen_rows() + 1;
     }
-    if (editor::get_cursor_col() < viewport_col) {
-        viewport_col = editor::get_cursor_col();
-    }
+
+    viewport_col = std::min(viewport_col, editor::get_cursor_col());
+
     if (editor::get_cursor_col() >= viewport_col + editor::get_screen_cols()) {
         viewport_col = editor::get_cursor_col() - editor::get_screen_cols() + 1;
     }
@@ -96,7 +97,7 @@ static Line* get_cursor_text_line()
 static void fixup_cursor_col()
 {
     // Adjust cursor column position when switching line
-    auto* cursor_line = get_cursor_text_line();
+    Line* cursor_line = get_cursor_text_line();
     size_t rowlen = cursor_line ? utf8::strlen(state.utf8, *cursor_line) : 0;
     state.cursor_coord.col = std::min(state.cursor_coord.col, rowlen);
 }
@@ -182,15 +183,16 @@ size_t get_cursor_col()
     return state.cursor_coord.col;
 }
 
-void set_screen_size(ScreenSize screen_size)
+static void set_screen_size(ScreenSize screen_size)
 {
     state.screen_size = screen_size;
     state.screen_buffer.reserve(screen_size.rows * screen_size.cols);
 }
-ScreenSize get_screen_size()
+static ScreenSize get_screen_size()
 {
     return state.screen_size;
 }
+
 void set_screen_rows(size_t rows)
 {
     set_screen_size(ScreenSize { rows, get_screen_cols() });

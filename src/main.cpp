@@ -15,6 +15,7 @@ struct Arguments {
 
 static void usage()
 {
+    // NOLINTNEXTLINE(*avoid-c-arrays*)
     static constexpr char usage_message[] = R"(Usage:
     ted [options] [file ...]
 
@@ -45,13 +46,13 @@ static Arguments parse_arguments(std::span<char*> args)
                 arguments.debug = true;
             } else if (arg == "-h" || arg == "--help") {
                 usage();
-                std::exit(EXIT_SUCCESS);
+                std::exit(EXIT_SUCCESS); // NOLINT(*concurrency*)
             } else if (arg == "-v" || arg == "--version") {
                 version();
-                std::exit(EXIT_SUCCESS);
+                std::exit(EXIT_SUCCESS); // NOLINT(*concurrency*)
             } else {
                 usage();
-                std::exit(EXIT_FAILURE);
+                std::exit(EXIT_FAILURE); // NOLINT(*concurrency*)
             }
         } else {
             arguments.files.emplace_back(arg);
@@ -69,7 +70,7 @@ int main(int argc, char* argv[])
     }
 
     if (!ted::os::isatty(stdin) || !ted::os::isatty(stdout)) {
-        std::fprintf(stderr, "not a tty\n");
+        (void)std::fprintf(stderr, "not a tty\n");
         return 1;
     }
 

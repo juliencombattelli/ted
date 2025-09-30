@@ -6,9 +6,7 @@
 #include <ted/utils.hpp>
 
 #include <array>
-#include <cstdint>
 #include <cstdlib>
-#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -62,6 +60,7 @@ struct State {
     utf8::State* utf8;
 };
 
+// NOLINTNEXTLINE(*global*)
 extern State state;
 
 void dump_state();
