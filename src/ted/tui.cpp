@@ -281,6 +281,9 @@ static void write_screen_buffer()
 
 static void refresh_screen()
 {
+    if (editor::state.debug_enabled) {
+        editor::dump_state();
+    }
     editor::scroll();
 
     term::cursor_hide();

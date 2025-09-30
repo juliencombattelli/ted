@@ -9,6 +9,30 @@ namespace ted::editor {
 
 State state;
 
+void dump_state()
+{
+    static constexpr const char* dumpfilename = "ted.dumpstate";
+    std::fstream file(dumpfilename, std::fstream::app | std::fstream::ate);
+
+    if (!file.is_open()) {
+        os::exit_err_format("Cannot open file {}", dumpfilename);
+    }
+    static size_t iteration = 0;
+    file << std::format(
+        "it={}, "
+        "screen={{row={},col={}}}, "
+        "cursor={{row={},col={}}}, "
+        "viewport={{row={},col={}}}, ",
+        iteration++,
+        state.screen_size.rows,
+        state.screen_size.cols,
+        state.cursor_coord.row,
+        state.cursor_coord.col,
+        state.viewport_offset.row,
+        state.viewport_offset.col);
+    file << std::endl;
+}
+
 void init()
 {
     // Load default configuration

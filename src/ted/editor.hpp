@@ -47,9 +47,12 @@ struct State {
     Coord viewport_offset;
     char eob_char;
     KeyMap keymap;
+    bool debug_enabled;
 };
 
 extern State state;
+
+void dump_state();
 
 void init();
 
