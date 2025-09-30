@@ -2,6 +2,7 @@
 #include <ted/os.hpp>
 #include <ted/term.hpp>
 #include <ted/tui.hpp>
+#include <ted/utf8.hpp>
 
 #include <fstream>
 
@@ -39,6 +40,16 @@ void init()
     state.eob_char = '~';
     // Keymap is not initialized here as the default mapping could change
     // between a TUI or GUI mode
+
+    // Preallocate the UTF8 parser object
+    utf8::init();
+    state.utf8 = utf8::create();
+}
+
+void deinit()
+{
+    utf8::destroy(state.utf8);
+    utf8::deinit();
 }
 
 void screen_buffer_append_char(char c)
@@ -74,7 +85,7 @@ void scroll()
 }
 
 // TODO consider using std::optional
-static std::string* get_cursor_text_line()
+static Line* get_cursor_text_line()
 {
     if (state.cursor_coord.row >= state.viewed_file->lines.size()) {
         return nullptr;
@@ -84,8 +95,9 @@ static std::string* get_cursor_text_line()
 
 static void fixup_cursor_col()
 {
+    // Adjust cursor column position when switching line
     auto* cursor_line = get_cursor_text_line();
-    size_t rowlen = cursor_line ? cursor_line->size() : 0;
+    size_t rowlen = cursor_line ? utf8::strlen(state.utf8, *cursor_line) : 0;
     state.cursor_coord.col = std::min(state.cursor_coord.col, rowlen);
 }
 
@@ -222,7 +234,7 @@ void open_file(const char* path)
     }
 
     for (std::string line; std::getline(file, line);) {
-        state.viewed_file->lines.emplace_back(line);
+        state.viewed_file->lines.emplace_back(std::move(line));
     }
 }
 

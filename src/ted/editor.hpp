@@ -2,11 +2,13 @@
 #define TED_EDITOR_HPP_
 
 #include <ted/key.hpp>
+#include <ted/utf8.hpp>
 #include <ted/utils.hpp>
 
 #include <array>
 #include <cstdint>
 #include <cstdlib>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -24,8 +26,17 @@ namespace ted::editor {
 using KeyHandler = void(void* userdata);
 using KeyMap = std::array<KeyHandler*, std::to_underlying(Key::Count)>;
 
+// TODO consider encapsulating the string and exposing some functions
+// differently to distinguish operations on bytes and on unicode graphemes
+// struct Line {
+//     std::string bytes; // access to raw bytes in line
+//     size_t chars() const; // number of unicode grapheme clusters in line
+//     std::string_view substr(size_t pos, size_t n); // substring by graphemes
+// };
+using Line = std::string;
+
 struct File {
-    std::vector<std::string> lines;
+    std::vector<Line> lines;
 };
 
 struct ScreenSize {
@@ -48,6 +59,7 @@ struct State {
     char eob_char;
     KeyMap keymap;
     bool debug_enabled;
+    utf8::State* utf8;
 };
 
 extern State state;
@@ -55,6 +67,7 @@ extern State state;
 void dump_state();
 
 void init();
+void deinit();
 
 void screen_buffer_append_char(char c);
 void screen_buffer_append(const char* s);

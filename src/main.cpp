@@ -1,12 +1,12 @@
-#include <cstdlib>
-#include <string_view>
 #include <ted/editor.hpp>
 #include <ted/os.hpp>
 #include <ted/tui.hpp>
 
 #include <cctype>
 #include <cstdio>
+#include <cstdlib>
 #include <span>
+#include <string_view>
 
 struct Arguments {
     std::vector<std::string> files;
@@ -87,4 +87,6 @@ int main(int argc, char* argv[])
         }
     }
     ted::tui::start();
+
+    ted::editor::deinit();
 }

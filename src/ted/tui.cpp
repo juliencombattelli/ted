@@ -3,6 +3,7 @@
 #include <ted/os.hpp>
 #include <ted/term.hpp>
 #include <ted/tui.hpp>
+#include <ted/utf8.hpp>
 
 #include <algorithm>
 #include <cassert>
@@ -10,6 +11,7 @@
 #include <climits>
 #include <cstdio>
 #include <format>
+#include <string_view>
 
 namespace ted::tui {
 
@@ -245,16 +247,24 @@ static void draw_lines()
         term::erase_line();
         size_t line_index = row + editor::state.viewport_offset.row;
         if (line_index < file->lines.size()) {
-            ssize_t display_len = (ssize_t)file->lines[line_index].size()
+            auto& line = file->lines[line_index];
+            ssize_t display_len
+                = (ssize_t)utf8::strlen(editor::state.utf8, line)
                 - editor::state.viewport_offset.col;
             display_len = std::clamp<ssize_t>(
                 display_len,
                 0,
                 editor::get_screen_cols());
-            const char* start_of_line
-                = &file->lines[line_index]
-                       .data()[editor::state.viewport_offset.col];
-            editor::screen_buffer_append_n(start_of_line, display_len);
+            if (display_len > 0) {
+                // Avoid 0 substring as this will cause issue with
+                // UTF32-substringing
+                auto u8s = utf8::substr(
+                    editor::state.utf8,
+                    line,
+                    editor::state.viewport_offset.col,
+                    display_len);
+                editor::screen_buffer_append_n(u8s.data(), u8s.length());
+            }
         } else {
             editor::screen_buffer_append_char(eob_char);
             if (should_draw_welcome_message(row)) {
