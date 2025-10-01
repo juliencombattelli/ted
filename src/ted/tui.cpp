@@ -114,13 +114,13 @@ static void load_default_tui_keymap()
     editor::set_keymap(Key::Code::Left, [](void*) { editor::cursor_left(); });
 
     editor::set_keymap(Key::Code::PageUp, [](void*) {
-        size_t times = editor::get_screen_rows();
+        size_t times = editor::get_screen_rows() - 1;
         while (times--) {
             editor::cursor_up();
         }
     });
     editor::set_keymap(Key::Code::PageDown, [](void*) {
-        size_t times = editor::get_screen_rows();
+        size_t times = editor::get_screen_rows() - 1;
         while (times--) {
             editor::cursor_down();
         }
