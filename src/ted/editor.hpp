@@ -64,6 +64,8 @@ struct State {
 // NOLINTNEXTLINE(*global*)
 extern State state;
 
+void dump_state_open(const char* filename);
+void dump_state_close();
 void dump_state();
 
 void init();

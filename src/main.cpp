@@ -76,9 +76,8 @@ int main(int argc, char* argv[])
 
     ted::editor::init();
     if (args.debug) {
-        ted::editor::state.debug_enabled = true;
+        ted::editor::dump_state_open("ted.dumpstate");
     }
-
     ted::tui::init();
     if (args.files.size() == 0) {
         ted::editor::open_new_file();
@@ -88,6 +87,8 @@ int main(int argc, char* argv[])
         }
     }
     ted::tui::start();
-
+    if (args.debug) {
+        ted::editor::dump_state_close();
+    }
     ted::editor::deinit();
 }

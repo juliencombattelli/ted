@@ -12,20 +12,40 @@ namespace ted::editor {
 // NOLINTNEXTLINE(*global*)
 State state;
 
+static struct {
+    std::string buffer;
+    std::fstream file;
+} state_dumper; // NOLINT(*global*)
+
+void dump_state_open(const char* filename)
+{
+    // Large enough to avoid allocation during dumping
+    static constexpr size_t buffer_initial_alloc = 4096;
+
+    state_dumper.buffer.reserve(buffer_initial_alloc);
+    state_dumper.file.open(filename, std::fstream::app | std::fstream::ate);
+    if (!state_dumper.file.is_open()) {
+        os::exit_err_format("Cannot open file {}", filename);
+    }
+
+    state.debug_enabled = true;
+}
+
+void dump_state_close()
+{
+    state_dumper.file.close();
+}
+
 void dump_state()
 {
-    static constexpr const char* dumpfilename = "ted.dumpstate";
-    std::fstream file(dumpfilename, std::fstream::app | std::fstream::ate);
-
-    if (!file.is_open()) {
-        os::exit_err_format("Cannot open file {}", dumpfilename);
-    }
     static size_t iteration = 0;
-    file << std::format(
+    state_dumper.buffer.clear();
+    std::format_to(
+        std::back_inserter(state_dumper.buffer),
         "it={}, "
         "screen={{row={},col={}}}, "
         "cursor={{row={},col={}}}, "
-        "viewport={{row={},col={}}}, ",
+        "viewport={{row={},col={}}}\n",
         iteration++,
         state.screen_size.rows,
         state.screen_size.cols,
@@ -33,7 +53,7 @@ void dump_state()
         state.cursor_coord.col,
         state.viewport_offset.row,
         state.viewport_offset.col);
-    file << "\n";
+    state_dumper.file << state_dumper.buffer;
 }
 
 void init()
