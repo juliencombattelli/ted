@@ -99,7 +99,7 @@ static void fixup_cursor_col()
     // Adjust cursor column position when switching line
     Line* cursor_line = get_cursor_text_line();
     size_t rowlen = cursor_line ? utf8::strlen(state.utf8, *cursor_line) : 0;
-    state.cursor_coord.col = std::min(state.cursor_coord.col, rowlen);
+    state.cursor_coord.col = std::min(state.cursor_col_memorized, rowlen);
 }
 
 void cursor_up()
@@ -121,7 +121,7 @@ void cursor_left()
     if (state.cursor_coord.col > 0) {
         state.cursor_coord.col--;
     }
-    fixup_cursor_col();
+    state.cursor_col_memorized = state.cursor_coord.col;
 }
 void cursor_right()
 {
@@ -129,7 +129,7 @@ void cursor_right()
     if (cursor_line && state.cursor_coord.col < cursor_line->size()) {
         state.cursor_coord.col++;
     }
-    fixup_cursor_col();
+    state.cursor_col_memorized = state.cursor_coord.col;
 }
 void cursor_start_of_line()
 {

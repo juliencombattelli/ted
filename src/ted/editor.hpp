@@ -53,6 +53,7 @@ struct State {
     std::string screen_buffer;
     ScreenSize screen_size;
     Coord cursor_coord;
+    size_t cursor_col_memorized {};
     Coord viewport_offset;
     char eob_char;
     KeyMap keymap;
