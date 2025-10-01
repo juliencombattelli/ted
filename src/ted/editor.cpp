@@ -43,8 +43,8 @@ void init()
     // Keymap is not initialized here as the default mapping could change
     // between a TUI or GUI mode
 
-    // Preallocate the UTF8 parser object
     utf8::init();
+    // Preallocate the UTF8 parser object
     state.utf8 = utf8::create();
 }
 
