@@ -156,7 +156,7 @@ void cursor_start_of_line()
     while (state.cursor_coord.col > 0) {
         state.cursor_coord.col--;
     }
-    fixup_cursor_col();
+    state.cursor_col_memorized = state.cursor_coord.col;
 }
 void cursor_end_of_line()
 {
@@ -166,7 +166,7 @@ void cursor_end_of_line()
             state.cursor_coord.col++;
         }
     }
-    fixup_cursor_col();
+    state.cursor_col_memorized = state.cursor_coord.col;
 }
 
 void set_cursor_row(size_t row)
