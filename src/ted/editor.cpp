@@ -89,19 +89,19 @@ void screen_buffer_append_n(const char* s, size_t n)
 
 void scroll()
 {
-    auto& viewport_row = editor::state.viewport_offset.row;
-    auto& viewport_col = editor::state.viewport_offset.col;
+    auto& viewport_row = state.viewport_offset.row;
+    auto& viewport_col = state.viewport_offset.col;
 
-    viewport_row = std::min(viewport_row, editor::get_cursor_row());
+    viewport_row = std::min(viewport_row, get_cursor_row());
 
-    if (editor::get_cursor_row() >= viewport_row + editor::get_screen_rows()) {
-        viewport_row = editor::get_cursor_row() - editor::get_screen_rows() + 1;
+    if (get_cursor_row() >= viewport_row + get_screen_rows()) {
+        viewport_row = get_cursor_row() - get_screen_rows() + 1;
     }
 
-    viewport_col = std::min(viewport_col, editor::get_cursor_col());
+    viewport_col = std::min(viewport_col, get_cursor_col());
 
-    if (editor::get_cursor_col() >= viewport_col + editor::get_screen_cols()) {
-        viewport_col = editor::get_cursor_col() - editor::get_screen_cols() + 1;
+    if (get_cursor_col() >= viewport_col + get_screen_cols()) {
+        viewport_col = get_cursor_col() - get_screen_cols() + 1;
     }
 }
 
