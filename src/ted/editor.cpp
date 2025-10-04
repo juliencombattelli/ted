@@ -140,6 +140,9 @@ void cursor_left()
 {
     if (state.cursor_coord.col > 0) {
         state.cursor_coord.col--;
+    } else {
+        state.cursor_coord.row--;
+        cursor_end_of_line();
     }
     state.cursor_col_memorized = state.cursor_coord.col;
 }
@@ -148,6 +151,9 @@ void cursor_right()
     auto* cursor_line = get_cursor_text_line();
     if (cursor_line && state.cursor_coord.col < cursor_line->size()) {
         state.cursor_coord.col++;
+    } else {
+        state.cursor_coord.row++;
+        cursor_start_of_line();
     }
     state.cursor_col_memorized = state.cursor_coord.col;
 }
