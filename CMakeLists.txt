@@ -15,8 +15,7 @@ else()
     message(FATAL_ERROR "Unsupported platform")
 endif()
 
-add_executable(ted
-    src/main.cpp
+add_library(libted STATIC
     src/ted/editor.cpp
     src/ted/os.cpp
     src/ted/term.cpp
@@ -25,7 +24,18 @@ add_executable(ted
     src/ted/platform/${PLATFORM_DIR}/os.cpp
     src/ted/platform/${PLATFORM_DIR}/term.cpp
 )
-target_include_directories(ted PRIVATE src)
-target_link_libraries(ted PRIVATE ICU::uc)
+set_target_properties(libted PROPERTIES PREFIX "")
+target_include_directories(libted PUBLIC src)
+target_link_libraries(libted PRIVATE ICU::uc)
+
+add_executable(ted
+    src/main.cpp
+)
+target_link_libraries(ted PRIVATE libted)
+
+add_executable(utf8_test
+    src/utf8_test.cpp
+)
+target_link_libraries(utf8_test PRIVATE libted)
 
 add_executable(kilo examples/kilo.c)

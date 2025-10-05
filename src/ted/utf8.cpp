@@ -1,4 +1,3 @@
-
 #include <ted/utf8.hpp>
 
 #include <ted/os.hpp>
@@ -27,7 +26,7 @@ void deinit()
 
 struct State {
     UText* utext;
-    UBreakIterator* it;
+    UBreakIterator* char_it;
 };
 
 State* create()
@@ -42,21 +41,28 @@ State* create()
     }
 
     status = U_ZERO_ERROR;
-    state->it = ubrk_open(UBRK_CHARACTER, nullptr, u"", -1, &status);
+    state->char_it = ubrk_open(UBRK_CHARACTER, nullptr, u"", -1, &status);
 
     // Reset the break iterator to our empty UText in case additional allocation
     // occurs to handle UTF8 strings
     status = U_ZERO_ERROR;
-    ubrk_setUText(state->it, state->utext, &status);
+    ubrk_setUText(state->char_it, state->utext, &status);
 
     return state;
 }
 
 void destroy(State* state)
 {
-    ubrk_close(state->it);
+    ubrk_close(state->char_it);
     utext_close(state->utext);
     delete state;
+}
+
+static bool is_wide_codepoint_at(UText* ut, int64_t byte_index)
+{
+    UChar32 codepoint = utext_char32At(ut, byte_index);
+    int width = u_getIntPropertyValue(codepoint, UCHAR_EAST_ASIAN_WIDTH);
+    return (width == U_EA_FULLWIDTH) || (width == U_EA_WIDE);
 }
 
 size_t strlen(State* state, std::string_view s)
@@ -64,7 +70,7 @@ size_t strlen(State* state, std::string_view s)
     assert(state != nullptr);
 
     UText* ut = state->utext;
-    UBreakIterator* it = state->it;
+    UBreakIterator* it = state->char_it;
 
     UErrorCode status = U_ZERO_ERROR;
     assert(s.length() <= std::numeric_limits<int64_t>::max());
@@ -75,23 +81,28 @@ size_t strlen(State* state, std::string_view s)
     ubrk_setUText(it, ut, &status);
     assert(U_SUCCESS(status));
 
-    size_t char_index = 0;
-    size_t start = 0;
-    size_t len = std::string_view::npos;
+    size_t char_count = 0;
     int32_t byte_index = ubrk_first(it);
     while (byte_index != UBRK_DONE) {
-        char_index++;
+        if (is_wide_codepoint_at(ut, byte_index)) {
+            char_count++;
+        }
+        char_count++;
         byte_index = ubrk_next(it);
     }
-    return char_index - 1;
+    return char_count - 1;
 }
 
-std::string_view substr(State* state, std::string_view s, size_t pos, size_t n)
+SubstrResult substr(
+    State* state,
+    std::string_view s,
+    size_t col_pos,
+    size_t col_n)
 {
     assert(state != nullptr);
 
     UText* ut = state->utext;
-    UBreakIterator* it = state->it;
+    UBreakIterator* it = state->char_it;
 
     UErrorCode status = U_ZERO_ERROR;
     assert(s.length() <= std::numeric_limits<int64_t>::max());
@@ -102,22 +113,46 @@ std::string_view substr(State* state, std::string_view s, size_t pos, size_t n)
     ubrk_setUText(it, ut, &status);
     assert(U_SUCCESS(status));
 
-    size_t char_index = 0;
-    size_t start = 0;
-    size_t len = std::string_view::npos;
+    static constexpr auto npos = std::string_view::npos;
+
+    SubstrResult result {
+        .substr {},
+        .byte_start = npos,
+        .byte_len = npos,
+        .cut_at_start = false,
+        .cut_at_end = false,
+    };
+
+    if (col_n == 0) {
+        return result;
+    }
+
+    size_t col_count = 0;
     int32_t byte_index = ubrk_first(it);
     while (byte_index != UBRK_DONE) {
-        if (char_index == pos) {
-            start = byte_index;
+        bool wide_codepoint = is_wide_codepoint_at(ut, byte_index);
+        if (result.byte_start == npos && col_count >= col_pos) {
+            result.byte_start = byte_index;
+            if (col_count > col_pos) {
+                result.cut_at_start = true;
+            }
         }
-        if (char_index == pos + n) {
-            len = byte_index - start;
+        auto col_end = col_pos + col_n - (wide_codepoint ? 1 : 0);
+        if (col_count >= col_end) {
+            result.byte_len = byte_index - result.byte_start;
+            if (wide_codepoint && col_count == col_end) {
+                result.cut_at_end = true;
+            }
             break;
         }
-        char_index++;
+        if (wide_codepoint) {
+            col_count++;
+        }
+        col_count++;
         byte_index = ubrk_next(it);
     }
-    return s.substr(start, len);
+    result.substr = s.substr(result.byte_start, result.byte_len);
+    return result;
 }
 
 } // namespace ted::utf8

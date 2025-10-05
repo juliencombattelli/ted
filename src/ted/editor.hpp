@@ -24,14 +24,15 @@ namespace ted::editor {
 using KeyHandler = void(void* userdata);
 using KeyMap = std::array<KeyHandler*, std::to_underlying(Key::Count)>;
 
-// TODO consider encapsulating the string and exposing some functions
-// differently to distinguish operations on bytes and on unicode graphemes
-// struct Line {
-//     std::string bytes; // access to raw bytes in line
-//     size_t chars() const; // number of unicode grapheme clusters in line
-//     std::string_view substr(size_t pos, size_t n); // substring by graphemes
-// };
-using Line = std::string;
+struct Line {
+    std::string bytes;
+
+    [[nodiscard]]
+    size_t length() const;
+
+    [[nodiscard]]
+    utf8::SubstrResult substr(size_t pos, size_t n) const;
+};
 
 struct File {
     std::vector<Line> lines;
@@ -74,6 +75,7 @@ void deinit();
 void screen_buffer_append_char(char c);
 void screen_buffer_append(const char* s);
 void screen_buffer_append_n(const char* s, size_t n);
+void screen_buffer_append_substr(const utf8::SubstrResult& substr);
 
 void scroll();
 

@@ -250,22 +250,13 @@ static void draw_lines()
         if (line_index < file->lines.size()) {
             auto& line = file->lines[line_index];
             ssize_t display_len
-                = (ssize_t)utf8::strlen(editor::state.utf8, line)
-                - editor::state.viewport_offset.col;
+                = (ssize_t)line.length() - editor::state.viewport_offset.col;
             display_len = std::clamp<ssize_t>(
                 display_len,
                 0,
                 editor::get_screen_cols());
-            if (display_len > 0) {
-                // Avoid 0 substring as this will cause issue with
-                // UTF32-substringing
-                auto u8s = utf8::substr(
-                    editor::state.utf8,
-                    line,
-                    editor::state.viewport_offset.col,
-                    display_len);
-                editor::screen_buffer_append_n(u8s.data(), u8s.length());
-            }
+            editor::screen_buffer_append_substr(
+                line.substr(editor::state.viewport_offset.col, display_len));
         } else {
             editor::screen_buffer_append_char(eob_char);
             if (should_draw_welcome_message(row)) {

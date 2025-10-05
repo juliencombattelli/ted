@@ -9,6 +9,16 @@
 
 namespace ted::editor {
 
+size_t Line::length() const
+{
+    return utf8::strlen(state.utf8, bytes);
+}
+
+utf8::SubstrResult Line::substr(size_t pos, size_t n) const
+{
+    return utf8::substr(state.utf8, bytes, pos, n);
+}
+
 // NOLINTNEXTLINE(*global*)
 State state;
 
@@ -86,6 +96,16 @@ void screen_buffer_append_n(const char* s, size_t n)
 {
     state.screen_buffer.append(s, n);
 }
+void screen_buffer_append_substr(const utf8::SubstrResult& substr)
+{
+    if (substr.cut_at_start) {
+        screen_buffer_append_char(' ');
+    }
+    screen_buffer_append_n(substr.substr.data(), substr.substr.length());
+    if (substr.cut_at_end) {
+        screen_buffer_append_char(' ');
+    }
+}
 
 void scroll()
 {
@@ -118,7 +138,7 @@ static void fixup_cursor_col()
 {
     // Adjust cursor column position when switching line
     Line* cursor_line = get_cursor_text_line();
-    size_t rowlen = cursor_line ? utf8::strlen(state.utf8, *cursor_line) : 0;
+    size_t rowlen = cursor_line ? cursor_line->length() : 0;
     state.cursor_coord.col = std::min(state.cursor_col_memorized, rowlen);
 }
 
@@ -149,7 +169,7 @@ void cursor_left()
 void cursor_right()
 {
     auto* cursor_line = get_cursor_text_line();
-    if (cursor_line && state.cursor_coord.col < cursor_line->size()) {
+    if (cursor_line && state.cursor_coord.col < cursor_line->length()) {
         state.cursor_coord.col++;
     } else {
         state.cursor_coord.row++;
@@ -168,7 +188,7 @@ void cursor_end_of_line()
 {
     auto* cursor_line = get_cursor_text_line();
     if (cursor_line) {
-        while (state.cursor_coord.col < cursor_line->size()) {
+        while (state.cursor_coord.col < cursor_line->length()) {
             state.cursor_coord.col++;
         }
     }

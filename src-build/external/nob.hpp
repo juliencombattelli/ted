@@ -57,9 +57,11 @@ SOFTWARE.
 
 namespace NOB_NAMESPACE {
 
-//²²² Encode a version number in a 32 bits integer²²².
-//    Only the major and minor versions are representable on 16 bits each.
-//    All zero is a reserved value (#NOB_NOT_AVAILABLE).
+// 🍌🍌az🍌🍌
+
+// 👨‍🏭👨‍🏭 Encode a version number in a 32 bits integer👨.
+//      Only the major and minor versions are representable on 16 bits each.
+//      All zero is a reserved value (#NOB_NOT_AVAILABLE).
 #define NOB_VERSION_NUMBER(major, minor)                                       \
     ((((major) % (1 << 16)) << 16) + (((minor) % (1 << 16))))
 
