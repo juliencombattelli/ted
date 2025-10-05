@@ -63,7 +63,7 @@ void dump_state()
         state.cursor_coord.col,
         state.viewport_offset.row,
         state.viewport_offset.col);
-    state_dumper.file << state_dumper.buffer;
+    state_dumper.file << state_dumper.buffer << std::flush;
 }
 
 void init()
