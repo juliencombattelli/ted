@@ -17,6 +17,9 @@ void destroy(State*);
 // Return the number of columns a string takes on a terminal
 size_t strlen(State* state, std::string_view s);
 
+// TODO some room for optimization here:
+// - remove unused fields (requires an update of the test suite though)
+// - pack the two booleans into a single byte
 struct SubstrResult {
     std::string_view substr;
     size_t byte_start; // only for test/debug
