@@ -32,6 +32,9 @@ struct Line {
 
     [[nodiscard]]
     utf8::SubstrResult substr(size_t pos, size_t n) const;
+
+    [[nodiscard]]
+    std::string_view at(size_t col) const;
 };
 
 struct File {
@@ -48,18 +51,25 @@ struct Coord {
     size_t col {};
 };
 
+struct Config {
+    KeyMap keymap;
+    char eob_char;
+    std::string tab_str;
+    uint8_t tab_width;
+    bool debug_enabled;
+};
+
 struct State {
     std::vector<File> opened_files;
     File* viewed_file;
     std::string screen_buffer;
     ScreenSize screen_size;
-    Coord cursor_coord;
+    Coord cursor_coord; // Cursor coordinate in file, not on screen
     size_t cursor_col_memorized {};
     Coord viewport_offset;
-    char eob_char;
-    KeyMap keymap;
-    bool debug_enabled;
     utf8::State* utf8;
+    std::string full_tab_string;
+    Config config;
 };
 
 // NOLINTNEXTLINE(*global*)
@@ -100,6 +110,12 @@ void set_screen_rows(size_t rows);
 size_t get_screen_rows();
 void set_screen_cols(size_t cols);
 size_t get_screen_cols();
+
+void set_tab_width(uint8_t width);
+uint8_t get_tab_width();
+
+void set_tab_string(std::string_view s);
+std::string_view get_tab_string();
 
 void set_keymap(Key::Code keycode, KeyHandler* handler);
 KeyHandler* get_keymap(Key::Code keycode);

@@ -5,6 +5,7 @@
 #include <ted/utf8.hpp>
 
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 
 namespace ted::editor {
@@ -17,6 +18,12 @@ size_t Line::length() const
 utf8::SubstrResult Line::substr(size_t pos, size_t n) const
 {
     return utf8::substr(state.utf8, bytes, pos, n);
+}
+
+std::string_view Line::at(size_t col) const
+{
+    // TODO handle wide char cut
+    return utf8::substr(state.utf8, bytes, col, 1).substr;
 }
 
 // NOLINTNEXTLINE(*global*)
@@ -38,7 +45,7 @@ void dump_state_open(const char* filename)
         os::exit_err_format("Cannot open file {}", filename);
     }
 
-    state.debug_enabled = true;
+    state.config.debug_enabled = true;
 }
 
 void dump_state_close()
@@ -68,14 +75,16 @@ void dump_state()
 
 void init()
 {
-    // Load default configuration
-    state.eob_char = '~';
-    // Keymap is not initialized here as the default mapping could change
-    // between a TUI or GUI mode
-
     utf8::init();
     // Preallocate the UTF8 parser object
     state.utf8 = utf8::create();
+
+    // Load default configuration
+    state.config.eob_char = '~';
+    set_tab_width(4);
+    set_tab_string("› ");
+    // Keymap is not initialized here as the default mapping could change
+    // between a TUI or GUI mode
 }
 
 void deinit()
@@ -86,15 +95,24 @@ void deinit()
 
 void screen_buffer_append_char(char c)
 {
-    state.screen_buffer.push_back(c);
+    if (c == '\t') {
+        state.screen_buffer.append(state.full_tab_string);
+    } else {
+        state.screen_buffer.push_back(c);
+    }
 }
 void screen_buffer_append(const char* s)
 {
-    state.screen_buffer.append(s);
+    assert(s != nullptr);
+    while (*s) {
+        screen_buffer_append_char(*s++);
+    }
 }
 void screen_buffer_append_n(const char* s, size_t n)
 {
-    state.screen_buffer.append(s, n);
+    for (size_t i = 0; i < n; i++) {
+        screen_buffer_append_char(s[i]);
+    }
 }
 void screen_buffer_append_substr(const utf8::SubstrResult& substr)
 {
@@ -179,18 +197,14 @@ void cursor_right()
 }
 void cursor_start_of_line()
 {
-    while (state.cursor_coord.col > 0) {
-        state.cursor_coord.col--;
-    }
+    state.cursor_coord.col = 0;
     state.cursor_col_memorized = state.cursor_coord.col;
 }
 void cursor_end_of_line()
 {
     auto* cursor_line = get_cursor_text_line();
     if (cursor_line) {
-        while (state.cursor_coord.col < cursor_line->length()) {
-            state.cursor_coord.col++;
-        }
+        state.cursor_coord.col = cursor_line->length();
     }
     state.cursor_col_memorized = state.cursor_coord.col;
 }
@@ -232,7 +246,8 @@ size_t get_cursor_col()
 static void set_screen_size(ScreenSize screen_size)
 {
     state.screen_size = screen_size;
-    state.screen_buffer.reserve(screen_size.rows * screen_size.cols);
+    // Reserve more than a screen to have spare space for wide chars (like tabs)
+    state.screen_buffer.reserve(2 * screen_size.rows * screen_size.cols);
 }
 static ScreenSize get_screen_size()
 {
@@ -256,14 +271,50 @@ size_t get_screen_cols()
     return state.screen_size.cols;
 }
 
+static void update_full_tab_string()
+{
+    // TODO emit warning if utf8::strlen(tab_str) > tab_width
+    // TODO emit error if tab_str is empty or tab_width == 0
+    std::string_view tab_str = utf8::substr(
+                                   state.utf8,
+                                   state.config.tab_str,
+                                   0,
+                                   state.config.tab_width)
+                                   .substr;
+    state.full_tab_string = tab_str;
+    uint8_t remaining
+        = state.config.tab_width - utf8::strlen(state.utf8, tab_str);
+    state.full_tab_string.append(remaining, tab_str.back());
+}
+
+void set_tab_width(uint8_t width)
+{
+    state.config.tab_width = width;
+    update_full_tab_string();
+}
+uint8_t get_tab_width()
+{
+    return state.config.tab_width;
+}
+
+void set_tab_string(std::string_view s)
+{
+    state.config.tab_str = s;
+    update_full_tab_string();
+}
+std::string_view get_tab_string()
+{
+    return state.config.tab_str;
+}
+
 void set_keymap(Key::Code keycode, KeyHandler* handler)
 {
-    state.keymap[keycode] = handler;
+    state.config.keymap[keycode] = handler;
 }
 
 KeyHandler* get_keymap(Key::Code keycode)
 {
-    return state.keymap[keycode];
+    return state.config.keymap[keycode];
 }
 
 void open_new_file()

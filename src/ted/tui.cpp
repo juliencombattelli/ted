@@ -238,7 +238,7 @@ static void draw_welcome_message(size_t welcome_message_line)
 
 static void draw_lines()
 {
-    char eob_char = editor::state.eob_char;
+    char eob_char = editor::state.config.eob_char;
     size_t welcome_message_line = 0;
     editor::File* file = editor::state.viewed_file;
     if (file == nullptr) {
@@ -279,7 +279,7 @@ static void write_screen_buffer()
 
 static void refresh_screen()
 {
-    if (editor::state.debug_enabled) {
+    if (editor::state.config.debug_enabled) {
         editor::dump_state();
     }
     editor::scroll();
