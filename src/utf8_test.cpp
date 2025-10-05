@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <string_view>
 
 void validate(
     const ted::utf8::SubstrResult& result,
@@ -38,8 +39,8 @@ int main()
     ted::utf8::SubstrResult expected_result_substr_len[] {
         {
             .substr = "",
-            .byte_start = 0,
-            .byte_len = 0,
+            .byte_start = std::string_view::npos,
+            .byte_len = std::string_view::npos,
             .cut_at_start = false,
             .cut_at_end = false,
         },
@@ -187,8 +188,8 @@ int main()
         },
         {
             .substr = "",
-            .byte_start = 30,
-            .byte_len = 0,
+            .byte_start = std::string_view::npos,
+            .byte_len = std::string_view::npos,
             .cut_at_start = false,
             .cut_at_end = false,
         },
