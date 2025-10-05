@@ -160,7 +160,7 @@ void cursor_left()
 {
     if (state.cursor_coord.col > 0) {
         state.cursor_coord.col--;
-    } else {
+    } else if (state.cursor_coord.row > 0) {
         state.cursor_coord.row--;
         cursor_end_of_line();
     }
@@ -171,7 +171,7 @@ void cursor_right()
     auto* cursor_line = get_cursor_text_line();
     if (cursor_line && state.cursor_coord.col < cursor_line->length()) {
         state.cursor_coord.col++;
-    } else {
+    } else if (state.cursor_coord.row < state.viewed_file->lines.size() - 1) {
         state.cursor_coord.row++;
         cursor_start_of_line();
     }
