@@ -14,6 +14,7 @@ struct State;
 State* create();
 void destroy(State*);
 
+// Return the number of columns a string takes on a terminal
 size_t strlen(State* state, std::string_view s);
 
 struct SubstrResult {
@@ -24,6 +25,7 @@ struct SubstrResult {
     bool cut_at_start;
     bool cut_at_end;
 };
+// Return a substring according to a column position and column count
 SubstrResult substr(State* state, std::string_view s, size_t pos, size_t n);
 
 } // namespace ted::utf8
