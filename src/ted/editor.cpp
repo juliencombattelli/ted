@@ -143,21 +143,17 @@ void scroll()
     }
 }
 
-// TODO consider using std::optional
-static Line* get_cursor_text_line()
+static Line& get_cursor_text_line()
 {
-    if (state.cursor_coord.row >= state.viewed_file->lines.size()) {
-        return nullptr;
-    }
-    return &state.viewed_file->lines[state.cursor_coord.row];
+    assert(state.cursor_coord.row < state.viewed_file->lines.size());
+    return state.viewed_file->lines[state.cursor_coord.row];
 }
 
 static void fixup_cursor_col()
 {
     // Adjust cursor column position when switching line
-    Line* cursor_line = get_cursor_text_line();
-    size_t rowlen = cursor_line ? cursor_line->length() : 0;
-    state.cursor_coord.col = std::min(state.cursor_col_memorized, rowlen);
+    size_t row_length = get_cursor_text_line().length();
+    state.cursor_coord.col = std::min(state.cursor_col_memorized, row_length);
 }
 
 void cursor_up()
@@ -186,8 +182,8 @@ void cursor_left()
 }
 void cursor_right()
 {
-    auto* cursor_line = get_cursor_text_line();
-    if (cursor_line && state.cursor_coord.col < cursor_line->length()) {
+    Line& cursor_line = get_cursor_text_line();
+    if (state.cursor_coord.col < cursor_line.length()) {
         state.cursor_coord.col++;
     } else if (state.cursor_coord.row < state.viewed_file->lines.size() - 1) {
         state.cursor_coord.row++;
@@ -202,10 +198,8 @@ void cursor_start_of_line()
 }
 void cursor_end_of_line()
 {
-    auto* cursor_line = get_cursor_text_line();
-    if (cursor_line) {
-        state.cursor_coord.col = cursor_line->length();
-    }
+    Line& cursor_line = get_cursor_text_line();
+    state.cursor_coord.col = cursor_line.length();
     state.cursor_col_memorized = state.cursor_coord.col;
 }
 

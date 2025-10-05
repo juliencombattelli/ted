@@ -161,15 +161,8 @@ void handle_resize()
 
 void init()
 {
-    size_t rows = 0;
-    size_t cols = 0;
     term::init();
-    if (!term::get_size(rows, cols)) {
-        // TODO fallback to escape sequence computing
-        os::exit_err("ted::term::get_size() failed");
-    }
-    editor::set_screen_rows(rows);
-    editor::set_screen_cols(cols);
+    handle_resize();
     load_default_tui_keymap();
 }
 
