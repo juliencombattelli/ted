@@ -27,6 +27,16 @@ add_library(libted STATIC
 set_target_properties(libted PROPERTIES PREFIX "")
 target_include_directories(libted PUBLIC src)
 target_link_libraries(libted PRIVATE ICU::uc)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(libted PUBLIC
+    -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wcast-qual
+    -Wdouble-promotion -Wduplicated-branches -Wduplicated-cond -Wfloat-equal
+    -Wformat=2 -Wformat-signedness -Winit-self -Wlogical-op
+    -Wmissing-declarations -Wswitch-default -Wswitch-enum
+    -Wundef -Wunused-macros -Wwrite-strings
+    # -Wpadded
+)
+endif()
 
 add_executable(ted
     src/main.cpp
