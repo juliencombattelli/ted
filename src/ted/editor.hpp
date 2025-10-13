@@ -24,18 +24,23 @@ namespace ted::editor {
 using KeyHandler = void(void* userdata);
 using KeyMap = std::array<KeyHandler*, std::to_underlying(Key::Count)>;
 
-struct Line {
-    std::string bytes;
-
-    [[nodiscard]]
-    size_t length() const;
-
-    [[nodiscard]]
-    utf8::SubstrResult substr(size_t pos, size_t n) const;
-
-    [[nodiscard]]
-    std::string_view at(size_t col) const;
+struct SubstrResult {
+    std::string_view substr;
+    // column count cut at start or end
+    size_t cut_at_start;
+    size_t cut_at_end;
 };
+
+uint8_t rendered_char_column_width(const ted::utf8::Char& ch);
+size_t column_count(std::string_view str);
+size_t rendered_column_count(std::string_view str);
+SubstrResult column_substr(std::string_view str, size_t col_pos, size_t col_n);
+SubstrResult rendered_column_substr(
+    std::string_view str,
+    size_t col_pos,
+    size_t col_n);
+
+using Line = std::string;
 
 struct File {
     std::vector<Line> lines;
@@ -64,10 +69,14 @@ struct State {
     File* viewed_file;
     std::string screen_buffer;
     ScreenSize screen_size;
-    Coord cursor_coord; // Cursor coordinate in file, not on screen
+    // Cursor coordinate in file, not on screen
+    Coord cursor_coord;
+    // Cursor column in file as rendered on the screen (eg. with tabs expanded),
+    // what the user really perceives as cursor coord
+    size_t cursor_col_rendered {};
     size_t cursor_col_memorized {};
     Coord viewport_offset;
-    utf8::State* utf8;
+    utf8::IteratorState* utf8_chars_iterator_state;
     std::string full_tab_string;
     Config config;
 };
@@ -85,7 +94,7 @@ void deinit();
 void screen_buffer_append_char(char c);
 void screen_buffer_append(const char* s);
 void screen_buffer_append_n(const char* s, size_t n);
-void screen_buffer_append_substr(const utf8::SubstrResult& substr);
+void screen_buffer_append_substr(const SubstrResult& substr);
 
 void scroll();
 

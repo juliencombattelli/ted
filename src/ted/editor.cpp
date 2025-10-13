@@ -7,23 +7,92 @@
 #include <algorithm>
 #include <cassert>
 #include <fstream>
+#include <functional>
+#include <string>
+#include <string_view>
 
 namespace ted::editor {
 
-size_t Line::length() const
+uint8_t rendered_char_column_width(const ted::utf8::Char& ch)
 {
-    return utf8::strlen(state.utf8, bytes);
+    auto sv = ch.to_string_view();
+    if (sv == "\t") {
+        return get_tab_width();
+    }
+    return ch.column;
 }
 
-utf8::SubstrResult Line::substr(size_t pos, size_t n) const
+size_t column_count(std::string_view str)
 {
-    return utf8::substr(state.utf8, bytes, pos, n);
+    size_t col_count = 0;
+    utf8::Chars chars = utf8::chars(str, state.utf8_chars_iterator_state);
+    for (utf8::Char ch : chars) {
+        col_count += ch.column;
+    }
+
+    return col_count;
 }
 
-std::string_view Line::at(size_t col) const
+size_t rendered_column_count(std::string_view str)
 {
-    // TODO handle wide char cut
-    return utf8::substr(state.utf8, bytes, col, 1).substr;
+    size_t col_count = 0;
+    utf8::Chars chars = utf8::chars(str, state.utf8_chars_iterator_state);
+    for (utf8::Char ch : chars) {
+        col_count += rendered_char_column_width(ch);
+    }
+
+    return col_count;
+}
+
+template<typename P>
+static SubstrResult column_substr_impl(
+    std::string_view str,
+    size_t col_pos,
+    size_t col_n,
+    P&& column_projector)
+{
+    SubstrResult result {
+        .substr {},
+        .cut_at_start = 0,
+        .cut_at_end = 0,
+    };
+
+    size_t byte_start = str.size();
+    size_t byte_len = std::string_view::npos;
+
+    size_t col_count = 0;
+    ted::utf8::Chars chars
+        = ted::utf8::chars(str, state.utf8_chars_iterator_state);
+    for (ted::utf8::Char ch : chars) {
+        ch.column = std::invoke(std::forward<P>(column_projector), ch);
+        if (byte_start == str.size() && col_count >= col_pos) {
+            byte_start = ch.start_byte;
+            result.cut_at_start = col_count - col_pos;
+        }
+        size_t col_end = col_pos + col_n;
+        if (col_count + ch.column > col_end) {
+            byte_len = ch.start_byte - byte_start;
+            result.cut_at_end = col_end - col_count;
+            break;
+        }
+        col_count += ch.column;
+    }
+
+    result.substr = str.substr(byte_start, byte_len);
+    return result;
+}
+
+SubstrResult column_substr(std::string_view str, size_t col_pos, size_t col_n)
+{
+    return column_substr_impl(str, col_pos, col_n, &utf8::Char::column);
+}
+
+SubstrResult rendered_column_substr(
+    std::string_view str,
+    size_t col_pos,
+    size_t col_n)
+{
+    return column_substr_impl(str, col_pos, col_n, &rendered_char_column_width);
 }
 
 // NOLINTNEXTLINE(*global*)
@@ -60,14 +129,16 @@ void dump_state()
     std::format_to(
         std::back_inserter(state_dumper.buffer),
         "it={}, "
-        "screen={{row={},col={}}}, "
-        "cursor={{row={},col={}}}, "
-        "viewport={{row={},col={}}}\n",
+        "scr={{r={},c={}}}, "
+        "cur={{r={},c={}}}, "
+        "curcoladj={}, "
+        "vwp={{r={},c={}}}\n",
         iteration++,
         state.screen_size.rows,
         state.screen_size.cols,
         state.cursor_coord.row,
         state.cursor_coord.col,
+        state.cursor_col_rendered,
         state.viewport_offset.row,
         state.viewport_offset.col);
     state_dumper.file << state_dumper.buffer << std::flush;
@@ -76,8 +147,8 @@ void dump_state()
 void init()
 {
     utf8::init();
-    // Preallocate the UTF8 parser object
-    state.utf8 = utf8::create();
+    // Preallocate the Unicode character iterator state object
+    state.utf8_chars_iterator_state = utf8::create_chars_iterator_state();
 
     // Load default configuration
     state.config.eob_char = '~';
@@ -89,7 +160,7 @@ void init()
 
 void deinit()
 {
-    utf8::destroy(state.utf8);
+    utf8::destroy_state(state.utf8_chars_iterator_state);
     utf8::deinit();
 }
 
@@ -114,15 +185,11 @@ void screen_buffer_append_n(const char* s, size_t n)
         screen_buffer_append_char(s[i]);
     }
 }
-void screen_buffer_append_substr(const utf8::SubstrResult& substr)
+void screen_buffer_append_substr(const SubstrResult& substr)
 {
-    if (substr.cut_at_start) {
-        screen_buffer_append_char(' ');
-    }
+    state.screen_buffer.append(substr.cut_at_start, ' ');
     screen_buffer_append_n(substr.substr.data(), substr.substr.length());
-    if (substr.cut_at_end) {
-        screen_buffer_append_char(' ');
-    }
+    state.screen_buffer.append(substr.cut_at_end, ' ');
 }
 
 void scroll()
@@ -152,8 +219,10 @@ static Line& get_cursor_text_line()
 static void fixup_cursor_col()
 {
     // Adjust cursor column position when switching line
-    size_t row_length = get_cursor_text_line().length();
+    Line& cursor_line = get_cursor_text_line();
+    size_t row_length = column_count(cursor_line);
     state.cursor_coord.col = std::min(state.cursor_col_memorized, row_length);
+    state.cursor_col_rendered = state.cursor_coord.col;
 }
 
 void cursor_up()
@@ -172,8 +241,14 @@ void cursor_down()
 }
 void cursor_left()
 {
+    Line& cursor_line = get_cursor_text_line();
     if (state.cursor_coord.col > 0) {
         state.cursor_coord.col--;
+        // if (cursor_line.at(state.cursor_coord.col) == "\t") {
+        //     state.cursor_col_rendered -= state.config.tab_width;
+        // } else {
+        state.cursor_col_rendered--;
+        // }
     } else if (state.cursor_coord.row > 0) {
         state.cursor_coord.row--;
         cursor_end_of_line();
@@ -183,7 +258,12 @@ void cursor_left()
 void cursor_right()
 {
     Line& cursor_line = get_cursor_text_line();
-    if (state.cursor_coord.col < cursor_line.length()) {
+    if (state.cursor_coord.col < column_count(cursor_line)) {
+        // if (cursor_line.at(state.cursor_coord.col) == "\t") {
+        //     state.cursor_col_rendered += state.config.tab_width;
+        // } else {
+        state.cursor_col_rendered++;
+        // }
         state.cursor_coord.col++;
     } else if (state.cursor_coord.row < state.viewed_file->lines.size() - 1) {
         state.cursor_coord.row++;
@@ -194,16 +274,18 @@ void cursor_right()
 void cursor_start_of_line()
 {
     state.cursor_coord.col = 0;
+    state.cursor_col_rendered = state.cursor_coord.col;
     state.cursor_col_memorized = state.cursor_coord.col;
 }
 void cursor_end_of_line()
 {
     Line& cursor_line = get_cursor_text_line();
-    state.cursor_coord.col = cursor_line.length();
+    state.cursor_coord.col = column_count(cursor_line);
+    state.cursor_col_rendered = state.cursor_coord.col;
     state.cursor_col_memorized = state.cursor_coord.col;
 }
 
-void set_cursor_row(size_t row)
+/*void set_cursor_row(size_t row)
 {
     state.cursor_coord.row = std::min(row, state.screen_size.rows - 1);
 }
@@ -214,13 +296,13 @@ void set_cursor_row_top()
 void set_cursor_row_bot()
 {
     state.cursor_coord.row = state.screen_size.rows - 1;
-}
+}*/
 size_t get_cursor_row()
 {
     return state.cursor_coord.row;
 }
 
-void set_cursor_col(size_t col)
+/*void set_cursor_col(size_t col)
 {
     state.cursor_coord.col = std::min(col, state.screen_size.cols - 1);
 }
@@ -231,10 +313,10 @@ void set_cursor_col_left()
 void set_cursor_col_right()
 {
     state.cursor_coord.col = state.screen_size.cols - 1;
-}
+}*/
 size_t get_cursor_col()
 {
-    return state.cursor_coord.col;
+    return state.cursor_col_rendered;
 }
 
 static void set_screen_size(ScreenSize screen_size)
@@ -267,17 +349,14 @@ size_t get_screen_cols()
 
 static void update_full_tab_string()
 {
-    // TODO emit warning if utf8::strlen(tab_str) > tab_width
+    // Limit state.config.tab_str to state.config.tab_width columns
+    // TODO emit warning if column_count(tab_str) > tab_width
     // TODO emit error if tab_str is empty or tab_width == 0
-    std::string_view tab_str = utf8::substr(
-                                   state.utf8,
-                                   state.config.tab_str,
-                                   0,
-                                   state.config.tab_width)
-                                   .substr;
+    std::string_view tab_str
+        = column_substr(state.config.tab_str, 0, state.config.tab_width).substr;
     state.full_tab_string = tab_str;
-    uint8_t remaining
-        = state.config.tab_width - utf8::strlen(state.utf8, tab_str);
+    // Pad remaining columns with the last char in tab_str
+    uint8_t remaining = state.config.tab_width - column_count(tab_str);
     state.full_tab_string.append(remaining, tab_str.back());
 }
 
@@ -314,8 +393,7 @@ KeyHandler* get_keymap(Key::Code keycode)
 void open_new_file()
 {
     state.viewed_file = &state.opened_files.emplace_back();
-    // TODO handle newline type depending on settings
-    state.viewed_file->lines.emplace_back("\r\n");
+    state.viewed_file->lines.emplace_back("");
 }
 void open_file(const char* path)
 {

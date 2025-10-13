@@ -9,7 +9,6 @@
 #include <cassert>
 #include <cctype>
 #include <climits>
-#include <cstdio>
 #include <format>
 #include <string_view>
 
@@ -200,11 +199,7 @@ static bool should_draw_welcome_message(size_t current_row)
         return false;
     }
 
-    if (editor::state.viewed_file->lines.size() > 1) {
-        return false;
-    }
-
-    if (editor::state.viewed_file->lines[0].length() > 2) {
+    if (!editor::state.viewed_file->lines[0].empty()) {
         return false;
     }
 
@@ -242,15 +237,12 @@ static void draw_lines()
         size_t line_index = row + editor::state.viewport_offset.row;
         if (line_index < file->lines.size()) {
             auto& line = file->lines[line_index];
-            ssize_t display_len
-                = (ssize_t)line.length() - editor::state.viewport_offset.col;
-            display_len = std::clamp<ssize_t>(
-                display_len,
-                0,
+            editor::SubstrResult rendered_line = editor::rendered_column_substr(
+                line,
+                editor::state.viewport_offset.col,
                 editor::get_screen_cols());
-            editor::screen_buffer_append_substr(
-                line.substr(editor::state.viewport_offset.col, display_len));
-        } else {
+            editor::screen_buffer_append_substr(rendered_line);
+        } else if (row > 0) { // Keep first line clear
             editor::screen_buffer_append_char(eob_char);
             if (should_draw_welcome_message(row)) {
                 draw_welcome_message(welcome_message_line++);
