@@ -244,11 +244,12 @@ void cursor_left()
     Line& cursor_line = get_cursor_text_line();
     if (state.cursor_coord.col > 0) {
         state.cursor_coord.col--;
-        // if (cursor_line.at(state.cursor_coord.col) == "\t") {
-        //     state.cursor_col_rendered -= state.config.tab_width;
-        // } else {
-        state.cursor_col_rendered--;
-        // }
+        if (column_substr(cursor_line, state.cursor_coord.col, 1).substr
+            == "\t") {
+            state.cursor_col_rendered -= get_tab_width();
+        } else {
+            state.cursor_col_rendered--;
+        }
     } else if (state.cursor_coord.row > 0) {
         state.cursor_coord.row--;
         cursor_end_of_line();
@@ -259,11 +260,12 @@ void cursor_right()
 {
     Line& cursor_line = get_cursor_text_line();
     if (state.cursor_coord.col < column_count(cursor_line)) {
-        // if (cursor_line.at(state.cursor_coord.col) == "\t") {
-        //     state.cursor_col_rendered += state.config.tab_width;
-        // } else {
-        state.cursor_col_rendered++;
-        // }
+        if (column_substr(cursor_line, state.cursor_coord.col, 1).substr
+            == "\t") {
+            state.cursor_col_rendered += get_tab_width();
+        } else {
+            state.cursor_col_rendered++;
+        }
         state.cursor_coord.col++;
     } else if (state.cursor_coord.row < state.viewed_file->lines.size() - 1) {
         state.cursor_coord.row++;
@@ -280,7 +282,7 @@ void cursor_start_of_line()
 void cursor_end_of_line()
 {
     Line& cursor_line = get_cursor_text_line();
-    state.cursor_coord.col = column_count(cursor_line);
+    state.cursor_coord.col = rendered_column_count(cursor_line);
     state.cursor_col_rendered = state.cursor_coord.col;
     state.cursor_col_memorized = state.cursor_coord.col;
 }
