@@ -53,32 +53,107 @@ static SubstrResult column_substr_impl(
 {
     SubstrResult result {
         .substr {},
+        .offset_from_start_char = 0,
         .cut_at_start = 0,
         .cut_at_end = 0,
     };
 
-    size_t byte_start = str.size();
-    size_t byte_len = std::string_view::npos;
+    const size_t col_end = col_pos + col_n;
+    size_t current_col = 0;
+    size_t byte_start = std::string_view::npos;
+    size_t byte_end = std::string_view::npos;
+    size_t last_included_col_end = 0;
+    bool first_char_processed = false;
 
-    size_t col_count = 0;
     ted::utf8::Chars chars
         = ted::utf8::chars(str, state.utf8_chars_iterator_state);
+
     for (ted::utf8::Char ch : chars) {
-        ch.column = std::invoke(std::forward<P>(column_projector), ch);
-        if (byte_start == str.size() && col_count >= col_pos) {
-            byte_start = ch.start_byte;
-            result.cut_at_start = col_count - col_pos;
+
+        const uint8_t char_width
+            = std::invoke(std::forward<P>(column_projector), ch);
+        const size_t char_start_col = current_col;
+        const size_t char_end_col = current_col + char_width;
+
+        // Check if this character overlaps with the requested column range
+        const bool overlaps_start = char_end_col > col_pos;
+        const bool overlaps_end = char_start_col < col_end;
+
+        if (overlaps_start && overlaps_end) {
+            // This character is within or overlaps the requested range
+            if (!first_char_processed) {
+                // This is the first character we're considering
+                first_char_processed = true;
+
+                if (char_start_col < col_pos) {
+                    // Character starts before col_pos, it's partially cut at
+                    // start
+                    result.offset_from_start_char = col_pos - char_start_col;
+                    result.cut_at_start
+                        = char_width - result.offset_from_start_char;
+                    last_included_col_end = col_pos;
+                    // Don't include this character in the substring
+                } else {
+                    // Character starts at or after col_pos
+                    // Calculate columns cut at start (gap between col_pos and
+                    // char_start_col)
+                    result.cut_at_start = char_start_col - col_pos;
+                    // No offset since we're not cutting into a character
+                    result.offset_from_start_char = 0;
+
+                    // Check if character fits completely
+                    if (char_end_col <= col_end) {
+                        // Character fits, include it
+                        byte_start = ch.start_byte;
+                        byte_end = ch.next_byte;
+                        last_included_col_end = char_end_col;
+                    } else {
+                        // Character doesn't fit at all
+                        // Nothing to include
+                        break;
+                    }
+                }
+            } else {
+                // We already processed the first character
+                if (byte_start == std::string_view::npos) {
+                    // First character was cut, this is the first complete char
+                    if (char_end_col <= col_end) {
+                        // Character fits, include it
+                        byte_start = ch.start_byte;
+                        byte_end = ch.next_byte;
+                        last_included_col_end = char_end_col;
+                    } else {
+                        // Character doesn't fit
+                        break;
+                    }
+                } else {
+                    // We already have started including characters
+                    if (char_end_col <= col_end) {
+                        // Character fits completely within range, extend
+                        // substring
+                        byte_end = ch.next_byte;
+                        last_included_col_end = char_end_col;
+                    } else {
+                        break; // Char extends beyond col_end, don't include it
+                    }
+                }
+            }
+        } else if (current_col >= col_end) {
+            break; // We've passed the end of the requested range
         }
-        size_t col_end = col_pos + col_n;
-        if (col_count + ch.column > col_end) {
-            byte_len = ch.start_byte - byte_start;
-            result.cut_at_end = col_end - col_count;
-            break;
-        }
-        col_count += ch.column;
+        current_col = char_end_col;
     }
 
-    result.substr = str.substr(byte_start, byte_len);
+    // Build the resulting substring
+    if (byte_start != std::string_view::npos
+        && byte_end != std::string_view::npos) {
+        // Calculate cut_at_end: columns at the end of the range not covered
+        if (last_included_col_end < col_end) {
+            result.cut_at_end = col_end - last_included_col_end;
+        }
+        result.substr = str.substr(byte_start, byte_end - byte_start);
+    }
+
     return result;
 }
 
@@ -152,6 +227,9 @@ void init()
 
     // Load default configuration
     state.config.eob_char = '~';
+    state.config.tab_width = 4;
+    state.config.tab_str = "› ";
+    // TODO crashing if config is not done above, to be investigated
     set_tab_width(4);
     set_tab_string("› ");
     // Keymap is not initialized here as the default mapping could change

@@ -24,8 +24,20 @@ namespace ted::editor {
 using KeyHandler = void(void* userdata);
 using KeyMap = std::array<KeyHandler*, std::to_underlying(Key::Count)>;
 
+// col_pos = 7
+// col_n = 13
+// col_pos + col_n ──────────────────────────┐
+// col_pos ──────────────────────┐           │
+//                               │           │
+// input string =        "start> █ >   >   > █ >   >   end"
+//                             ││││        │ │
+// offset_from_start_char = 2 ─┴┘││        │ │
+// cut_at_start = 2 ─────────────┴┘        │ │
+// cut_at_end = 3 ─────────────────────────┴─┘
 struct SubstrResult {
     std::string_view substr;
+    // column offset from beginning of char if start is cut
+    size_t offset_from_start_char;
     // column count cut at start or end
     size_t cut_at_start;
     size_t cut_at_end;

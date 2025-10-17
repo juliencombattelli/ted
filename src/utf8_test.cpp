@@ -14,6 +14,12 @@ static bool validate(
         std::cout << "  error: expecting substr '" << expected.substr
                   << "', got '" << result.substr << "'\n";
     }
+    if (result.offset_from_start_char != expected.offset_from_start_char) {
+        ok = false;
+        std::cout << "  error: expecting offset_from_start_char "
+                  << expected.offset_from_start_char << ", got "
+                  << result.offset_from_start_char << "\n";
+    }
     if (result.cut_at_start != expected.cut_at_start) {
         ok = false;
         std::cout << "  error: expecting cut_at_start " << expected.cut_at_start
@@ -36,66 +42,79 @@ static bool run_test_non_rendered()
     static constexpr ted::editor::SubstrResult expected_result_substr_len[] {
         {
             .substr = "",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 1,
         },
         {
             .substr = "a👨‍🏭",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 1,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\t",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc\t",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc\t",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 1,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc\t👨",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc\t👨d",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
@@ -105,66 +124,79 @@ static bool run_test_non_rendered()
         expected_result_substr_at_start[] {
             {
                 .substr = "a👨‍🏭b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "👨‍🏭b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 1,
                 .cut_at_start = 1,
                 .cut_at_end = 0,
             },
             {
                 .substr = "b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "\tc\t👨d",
+                .offset_from_start_char = 1,
                 .cut_at_start = 1,
                 .cut_at_end = 0,
             },
             {
                 .substr = "\tc\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "c\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "d",
+                .offset_from_start_char = 1,
                 .cut_at_start = 1,
                 .cut_at_end = 0,
             },
             {
                 .substr = "d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
@@ -220,96 +252,115 @@ static bool run_test_rendered()
     static constexpr ted::editor::SubstrResult expected_result_substr_len[] {
         {
             .substr = "",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 1,
         },
         {
             .substr = "a👨‍🏭",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 1,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 1,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 2,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 3,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\t",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 1,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 2,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 3,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc\t",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc\t",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 1,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc\t👨",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
         {
             .substr = "a👨‍🏭b👨‍🏭\tc\t👨d",
+            .offset_from_start_char = 0,
             .cut_at_start = 0,
             .cut_at_end = 0,
         },
@@ -319,96 +370,115 @@ static bool run_test_rendered()
         expected_result_substr_at_start[] {
             {
                 .substr = "a👨‍🏭b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "👨‍🏭b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 1,
                 .cut_at_start = 1,
                 .cut_at_end = 0,
             },
             {
                 .substr = "b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "\tc\t👨d",
+                .offset_from_start_char = 1,
                 .cut_at_start = 1,
                 .cut_at_end = 0,
             },
             {
                 .substr = "\tc\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "c\t👨d",
+                .offset_from_start_char = 1,
                 .cut_at_start = 3,
                 .cut_at_end = 0,
             },
             {
                 .substr = "c\t👨d",
+                .offset_from_start_char = 2,
                 .cut_at_start = 2,
                 .cut_at_end = 0,
             },
             {
                 .substr = "c\t👨d",
+                .offset_from_start_char = 3,
                 .cut_at_start = 1,
                 .cut_at_end = 0,
             },
             {
                 .substr = "c\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "\t👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "👨d",
+                .offset_from_start_char = 1,
                 .cut_at_start = 3,
                 .cut_at_end = 0,
             },
             {
                 .substr = "👨d",
+                .offset_from_start_char = 2,
                 .cut_at_start = 2,
                 .cut_at_end = 0,
             },
             {
                 .substr = "👨d",
+                .offset_from_start_char = 3,
                 .cut_at_start = 1,
                 .cut_at_end = 0,
             },
             {
                 .substr = "👨d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "d",
+                .offset_from_start_char = 1,
                 .cut_at_start = 1,
                 .cut_at_end = 0,
             },
             {
                 .substr = "d",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
             {
                 .substr = "",
+                .offset_from_start_char = 0,
                 .cut_at_start = 0,
                 .cut_at_end = 0,
             },
@@ -457,11 +527,27 @@ static bool run_test_rendered()
     return ok;
 }
 
+bool run_reference_test()
+{
+    const std::string str = "start\t\t\t\t\t\tend";
+
+    ted::editor::SubstrResult expected_result {
+        .substr = "\t\t",
+        .offset_from_start_char = 2,
+        .cut_at_start = 2,
+        .cut_at_end = 3,
+    };
+
+    auto result = ted::editor::rendered_column_substr(str, 7, 13);
+    return validate(result, expected_result);
+}
+
 int main()
 {
     ted::editor::init();
 
     bool ok = true;
+
     std::cout << "----------------------------------------------------------\n";
     std::cout << "Running test non-rendered\n";
     bool test_non_rendered_ok = run_test_non_rendered();
@@ -480,6 +566,15 @@ int main()
         std::cout << "Test non-rendered SUCCEEDED\n";
     }
     ok = test_rendered_ok && ok;
+    std::cout << "----------------------------------------------------------\n";
+    std::cout << "Running reference test\n";
+    bool reference_test_ok = run_reference_test();
+    if (!reference_test_ok) {
+        std::cout << "Reference test FAILED\n";
+    } else {
+        std::cout << "Reference test SUCCEEDED\n";
+    }
+    ok = reference_test_ok && ok;
     std::cout << "----------------------------------------------------------\n";
 
     ted::editor::deinit();
