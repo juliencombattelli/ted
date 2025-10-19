@@ -298,9 +298,13 @@ static void fixup_cursor_col()
 {
     // Adjust cursor column position when switching line
     Line& cursor_line = get_cursor_text_line();
-    size_t row_length = column_count(cursor_line);
-    state.cursor_coord.col = std::min(state.cursor_col_memorized, row_length);
-    state.cursor_col_rendered = state.cursor_coord.col;
+    size_t row_length = rendered_column_count(cursor_line);
+    state.cursor_col_rendered
+        = std::min(state.cursor_col_memorized, row_length);
+    SubstrResult substr
+        = rendered_column_substr(cursor_line, state.cursor_col_rendered, 0);
+    state.cursor_col_rendered -= substr.offset_from_start_char;
+    state.cursor_coord.col = state.cursor_col_rendered;
 }
 
 void cursor_up()
@@ -332,7 +336,7 @@ void cursor_left()
         state.cursor_coord.row--;
         cursor_end_of_line();
     }
-    state.cursor_col_memorized = state.cursor_coord.col;
+    state.cursor_col_memorized = state.cursor_col_rendered;
 }
 void cursor_right()
 {
@@ -349,7 +353,7 @@ void cursor_right()
         state.cursor_coord.row++;
         cursor_start_of_line();
     }
-    state.cursor_col_memorized = state.cursor_coord.col;
+    state.cursor_col_memorized = state.cursor_col_rendered;
 }
 void cursor_start_of_line()
 {
