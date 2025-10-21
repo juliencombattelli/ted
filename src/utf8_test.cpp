@@ -1,249 +1,36 @@
 #include "ted/editor.hpp"
 
-#include <iostream>
+#include <gtest/gtest.h>
+
 #include <string>
 #include <string_view>
 
-static bool validate(
+static void gtest_validate(
     const ted::editor::SubstrResult& result,
     const ted::editor::SubstrResult& expected)
 {
-    bool ok = true;
-    if (result.substr != expected.substr) {
-        ok = false;
-        std::cout << "  error: expecting substr '" << expected.substr
-                  << "', got '" << result.substr << "'\n";
-    }
-    if (result.offset_from_start_char != expected.offset_from_start_char) {
-        ok = false;
-        std::cout << "  error: expecting offset_from_start_char "
-                  << expected.offset_from_start_char << ", got "
-                  << result.offset_from_start_char << "\n";
-    }
-    if (result.cut_at_start != expected.cut_at_start) {
-        ok = false;
-        std::cout << "  error: expecting cut_at_start " << expected.cut_at_start
-                  << ", got " << result.cut_at_start << "\n";
-    }
-    if (result.cut_at_end != expected.cut_at_end) {
-        ok = false;
-        std::cout << "  error: expecting cut_at_end " << expected.cut_at_end
-                  << ", got " << result.cut_at_end << "\n";
-    }
-    return ok;
+    EXPECT_EQ(result.substr, expected.substr);
+    EXPECT_EQ(result.offset_from_start_char, expected.offset_from_start_char);
+    EXPECT_EQ(result.cut_at_start, expected.cut_at_start);
+    EXPECT_EQ(result.cut_at_end, expected.cut_at_end);
 }
 
-static bool run_test_non_rendered()
+TEST(Utf8, reference_rendered_column_substr)
 {
-    const std::string str = "a👨‍🏭b👨‍🏭\tc\t👨d";
+    const std::string str = "start\t\t\t\t\t\tend";
 
-    static constexpr size_t expected_column_count = 12;
-
-    static constexpr ted::editor::SubstrResult expected_result_substr_len[] {
-        {
-            .substr = "",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 0,
-        },
-        {
-            .substr = "a",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 0,
-        },
-        {
-            .substr = "a",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 1,
-        },
-        {
-            .substr = "a👨‍🏭",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 0,
-        },
-        {
-            .substr = "a👨‍🏭b",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 0,
-        },
-        {
-            .substr = "a👨‍🏭b",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 1,
-        },
-        {
-            .substr = "a👨‍🏭b👨‍🏭",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 0,
-        },
-        {
-            .substr = "a👨‍🏭b👨‍🏭\t",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 0,
-        },
-        {
-            .substr = "a👨‍🏭b👨‍🏭\tc",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 0,
-        },
-        {
-            .substr = "a👨‍🏭b👨‍🏭\tc\t",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 0,
-        },
-        {
-            .substr = "a👨‍🏭b👨‍🏭\tc\t",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 1,
-        },
-        {
-            .substr = "a👨‍🏭b👨‍🏭\tc\t👨",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 0,
-        },
-        {
-            .substr = "a👨‍🏭b👨‍🏭\tc\t👨d",
-            .offset_from_start_char = 0,
-            .cut_at_start = 0,
-            .cut_at_end = 0,
-        },
+    ted::editor::SubstrResult expected_result {
+        .substr = "\t\t",
+        .offset_from_start_char = 2,
+        .cut_at_start = 2,
+        .cut_at_end = 3,
     };
 
-    static constexpr ted::editor::SubstrResult
-        expected_result_substr_at_start[] {
-            {
-                .substr = "a👨‍🏭b👨‍🏭\tc\t👨d",
-                .offset_from_start_char = 0,
-                .cut_at_start = 0,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "👨‍🏭b👨‍🏭\tc\t👨d",
-                .offset_from_start_char = 0,
-                .cut_at_start = 0,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "b👨‍🏭\tc\t👨d",
-                .offset_from_start_char = 1,
-                .cut_at_start = 1,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "b👨‍🏭\tc\t👨d",
-                .offset_from_start_char = 0,
-                .cut_at_start = 0,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "👨‍🏭\tc\t👨d",
-                .offset_from_start_char = 0,
-                .cut_at_start = 0,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "\tc\t👨d",
-                .offset_from_start_char = 1,
-                .cut_at_start = 1,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "\tc\t👨d",
-                .offset_from_start_char = 0,
-                .cut_at_start = 0,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "c\t👨d",
-                .offset_from_start_char = 0,
-                .cut_at_start = 0,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "\t👨d",
-                .offset_from_start_char = 0,
-                .cut_at_start = 0,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "👨d",
-                .offset_from_start_char = 0,
-                .cut_at_start = 0,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "d",
-                .offset_from_start_char = 1,
-                .cut_at_start = 1,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "d",
-                .offset_from_start_char = 0,
-                .cut_at_start = 0,
-                .cut_at_end = 0,
-            },
-            {
-                .substr = "",
-                .offset_from_start_char = 0,
-                .cut_at_start = 0,
-                .cut_at_end = 0,
-            },
-        };
-
-    static_assert(
-        std::size(expected_result_substr_len) == expected_column_count + 1);
-    static_assert(
-        std::size(expected_result_substr_at_start)
-        == expected_column_count + 1);
-
-    bool ok = true;
-
-    size_t column_count = ted::editor::column_count(str);
-
-    if (column_count != expected_column_count) {
-        std::cout << "  error: expecting column_count " << expected_column_count
-                  << ", got " << column_count << "\n";
-        ok = false;
-    }
-
-    column_count = std::min(column_count, expected_column_count);
-
-    std::cout << "Substringing from column 0 to column " << column_count
-              << "\n";
-    for (size_t len = 0; len <= column_count; len++) {
-        auto result = ted::editor::column_substr(str, 0, len);
-        std::cout << "str.substr(0, len=" << len << ")\n";
-        std::cout << "  result is '" << result.substr << "'\n";
-        ok = validate(result, expected_result_substr_len[len]) && ok;
-    }
-
-    std::cout << "Substringing from column " << column_count
-              << " to column 0\n";
-    for (size_t start = 0; start <= column_count; start++) {
-        auto result
-            = ted::editor::column_substr(str, start, column_count - start);
-        std::cout << "str.substr(start=" << start
-                  << ", len=" << column_count - start << ")\n";
-        std::cout << "  result is '" << result.substr << "'\n";
-        ok = validate(result, expected_result_substr_at_start[start]) && ok;
-    }
-
-    return ok;
+    auto result = ted::editor::rendered_column_substr(str, 7, 13);
+    gtest_validate(result, expected_result);
 }
 
-static bool run_test_rendered()
+TEST(Utf8, rendered_column_count)
 {
     const std::string str = "a👨‍🏭b👨‍🏭\tc\t👨d";
 
@@ -490,94 +277,229 @@ static bool run_test_rendered()
         std::size(expected_result_substr_at_start)
         == expected_column_count + 1);
 
-    bool ok = true;
-
     size_t column_count = ted::editor::rendered_column_count(str);
 
-    if (column_count != expected_column_count) {
-        std::cout << "  error: expecting column_count " << expected_column_count
-                  << ", got " << column_count << "\n";
-        ok = false;
-    }
+    ASSERT_EQ(column_count, expected_column_count);
 
     column_count = std::min(column_count, expected_column_count);
 
-    std::cout << "Substringing from column 0 to column " << column_count
-              << "\n";
     for (size_t len = 0; len <= column_count; len++) {
         auto result = ted::editor::rendered_column_substr(str, 0, len);
-        std::cout << "str.substr(0, len=" << len << ")\n";
-        std::cout << "  result is '" << result.substr << "'\n";
-        ok = validate(result, expected_result_substr_len[len]) && ok;
+
+        gtest_validate(result, expected_result_substr_len[len]);
     }
 
-    std::cout << "Substringing from column " << column_count
-              << " to column 0\n";
     for (size_t start = 0; start <= column_count; start++) {
         auto result = ted::editor::rendered_column_substr(
             str,
             start,
             column_count - start);
-        std::cout << "str.substr(start=" << start
-                  << ", len=" << column_count - start << ")\n";
-        std::cout << "  result is '" << result.substr << "'\n";
-        ok = validate(result, expected_result_substr_at_start[start]) && ok;
+        gtest_validate(result, expected_result_substr_at_start[start]);
     }
-
-    return ok;
 }
 
-bool run_reference_test()
+TEST(Utf8, column_substr)
 {
-    const std::string str = "start\t\t\t\t\t\tend";
+    const std::string str = "a👨‍🏭b👨‍🏭\tc\t👨d";
 
-    ted::editor::SubstrResult expected_result {
-        .substr = "\t\t",
-        .offset_from_start_char = 2,
-        .cut_at_start = 2,
-        .cut_at_end = 3,
+    static constexpr size_t expected_column_count = 12;
+
+    static constexpr ted::editor::SubstrResult expected_result_substr_len[] {
+        {
+            .substr = "",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 0,
+        },
+        {
+            .substr = "a",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 0,
+        },
+        {
+            .substr = "a",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 1,
+        },
+        {
+            .substr = "a👨‍🏭",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 0,
+        },
+        {
+            .substr = "a👨‍🏭b",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 0,
+        },
+        {
+            .substr = "a👨‍🏭b",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 1,
+        },
+        {
+            .substr = "a👨‍🏭b👨‍🏭",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 0,
+        },
+        {
+            .substr = "a👨‍🏭b👨‍🏭\t",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 0,
+        },
+        {
+            .substr = "a👨‍🏭b👨‍🏭\tc",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 0,
+        },
+        {
+            .substr = "a👨‍🏭b👨‍🏭\tc\t",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 0,
+        },
+        {
+            .substr = "a👨‍🏭b👨‍🏭\tc\t",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 1,
+        },
+        {
+            .substr = "a👨‍🏭b👨‍🏭\tc\t👨",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 0,
+        },
+        {
+            .substr = "a👨‍🏭b👨‍🏭\tc\t👨d",
+            .offset_from_start_char = 0,
+            .cut_at_start = 0,
+            .cut_at_end = 0,
+        },
     };
 
-    auto result = ted::editor::rendered_column_substr(str, 7, 13);
-    return validate(result, expected_result);
+    static constexpr ted::editor::SubstrResult
+        expected_result_substr_at_start[] {
+            {
+                .substr = "a👨‍🏭b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
+                .cut_at_start = 0,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "👨‍🏭b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
+                .cut_at_start = 0,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 1,
+                .cut_at_start = 1,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "b👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
+                .cut_at_start = 0,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "👨‍🏭\tc\t👨d",
+                .offset_from_start_char = 0,
+                .cut_at_start = 0,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "\tc\t👨d",
+                .offset_from_start_char = 1,
+                .cut_at_start = 1,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "\tc\t👨d",
+                .offset_from_start_char = 0,
+                .cut_at_start = 0,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "c\t👨d",
+                .offset_from_start_char = 0,
+                .cut_at_start = 0,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "\t👨d",
+                .offset_from_start_char = 0,
+                .cut_at_start = 0,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "👨d",
+                .offset_from_start_char = 0,
+                .cut_at_start = 0,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "d",
+                .offset_from_start_char = 1,
+                .cut_at_start = 1,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "d",
+                .offset_from_start_char = 0,
+                .cut_at_start = 0,
+                .cut_at_end = 0,
+            },
+            {
+                .substr = "",
+                .offset_from_start_char = 0,
+                .cut_at_start = 0,
+                .cut_at_end = 0,
+            },
+        };
+
+    static_assert(
+        std::size(expected_result_substr_len) == expected_column_count + 1);
+    static_assert(
+        std::size(expected_result_substr_at_start)
+        == expected_column_count + 1);
+
+    size_t column_count = ted::editor::column_count(str);
+
+    ASSERT_EQ(column_count, expected_column_count);
+
+    column_count = std::min(column_count, expected_column_count);
+
+    for (size_t len = 0; len <= column_count; len++) {
+        auto result = ted::editor::column_substr(str, 0, len);
+        gtest_validate(result, expected_result_substr_len[len]);
+    }
+
+    for (size_t start = 0; start <= column_count; start++) {
+        auto result
+            = ted::editor::column_substr(str, start, column_count - start);
+        gtest_validate(result, expected_result_substr_at_start[start]);
+    }
 }
 
-int main()
+int main(int argc, char** argv)
 {
+    testing::InitGoogleTest(&argc, argv);
+
     ted::editor::init();
 
-    bool ok = true;
-
-    std::cout << "----------------------------------------------------------\n";
-    std::cout << "Running test non-rendered\n";
-    bool test_non_rendered_ok = run_test_non_rendered();
-    if (!test_non_rendered_ok) {
-        std::cout << "Test non-rendered FAILED\n";
-    } else {
-        std::cout << "Test non-rendered SUCCEEDED\n";
-    }
-    ok = test_non_rendered_ok && ok;
-    std::cout << "----------------------------------------------------------\n";
-    std::cout << "Running test rendered\n";
-    bool test_rendered_ok = run_test_rendered();
-    if (!test_rendered_ok) {
-        std::cout << "Test non-rendered FAILED\n";
-    } else {
-        std::cout << "Test non-rendered SUCCEEDED\n";
-    }
-    ok = test_rendered_ok && ok;
-    std::cout << "----------------------------------------------------------\n";
-    std::cout << "Running reference test\n";
-    bool reference_test_ok = run_reference_test();
-    if (!reference_test_ok) {
-        std::cout << "Reference test FAILED\n";
-    } else {
-        std::cout << "Reference test SUCCEEDED\n";
-    }
-    ok = reference_test_ok && ok;
-    std::cout << "----------------------------------------------------------\n";
+    int result = RUN_ALL_TESTS();
 
     ted::editor::deinit();
 
-    return ok ? 0 : 1;
+    return result;
 }
