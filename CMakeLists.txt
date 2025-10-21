@@ -32,15 +32,22 @@ add_library(libted STATIC
 set_target_properties(libted PROPERTIES PREFIX "")
 target_include_directories(libted PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/include")
 target_link_libraries(libted PRIVATE ICU::uc)
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(libted PUBLIC
+
+set(TED_WARNINGS_GNU_COMPATIBLE
     -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wcast-qual
-    -Wdouble-promotion -Wduplicated-branches -Wduplicated-cond -Wfloat-equal
-    -Wformat=2 -Wformat-signedness -Winit-self -Wlogical-op
-    -Wmissing-declarations -Wswitch-default -Wswitch-enum
+    -Wdouble-promotion -Wfloat-equal -Wformat=2 -Wformat-signedness
+    -Winit-self -Wmissing-declarations -Wswitch-default -Wswitch-enum
     -Wundef -Wunused-macros -Wwrite-strings
     # -Wpadded
 )
+set(TED_WARNINGS_GNU_EXCLUSIVE
+    -Wduplicated-branches -Wduplicated-cond -Wlogical-op
+)
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    target_compile_options(libted PUBLIC ${TED_WARNINGS_GNU_COMPATIBLE})
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        target_compile_options(libted PUBLIC ${TED_WARNINGS_GNU_EXCLUSIVE})
+    endif()
 endif()
 
 add_executable(ted
