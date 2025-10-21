@@ -1,5 +1,6 @@
 #include <ted/editor.hpp>
 #include <ted/os.hpp>
+#include <ted/term.hpp>
 #include <ted/tui.hpp>
 
 #include <cctype>
@@ -69,15 +70,11 @@ int main(int argc, char* argv[])
         ted::os::print_source_location_at_exit(true);
     }
 
-    if (!ted::os::isatty(stdin) || !ted::os::isatty(stdout)) {
-        (void)std::fprintf(stderr, "not a tty\n");
-        return 1;
-    }
-
     ted::editor::init();
     if (args.debug) {
         ted::editor::dump_state_open("ted.dumpstate");
     }
+    ted::term::init();
     ted::tui::init();
     if (args.files.size() == 0) {
         ted::editor::open_new_file();
@@ -87,6 +84,7 @@ int main(int argc, char* argv[])
         }
     }
     ted::tui::start();
+    ted::term::deinit();
     if (args.debug) {
         ted::editor::dump_state_close();
     }

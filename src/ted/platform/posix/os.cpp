@@ -5,9 +5,9 @@
 
 namespace ted::os {
 
-bool isatty(FILE* stream)
+bool isatty(int fd)
 {
-    return ::isatty(fileno(stream)) == 1;
+    return ::isatty(fd) == 1;
 }
 
 } // namespace ted::os

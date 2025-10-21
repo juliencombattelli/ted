@@ -59,7 +59,7 @@ void exit_err_format(utils::Fmt fmt, Args&&... args)
 void print_source_location_at_exit(bool do_print_source_location);
 
 [[nodiscard]]
-bool isatty(FILE* stream);
+bool isatty(int fd);
 
 } // namespace ted::os
 

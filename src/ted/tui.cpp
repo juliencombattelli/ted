@@ -160,7 +160,6 @@ void handle_resize()
 
 void init()
 {
-    term::init();
     handle_resize();
     load_default_tui_keymap();
 }

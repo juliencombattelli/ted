@@ -5,10 +5,17 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <optional>
 
 namespace ted::term {
 
-void init();
+struct Fds {
+    int in;
+    int out;
+};
+
+void init(std::optional<Fds> fds = std::nullopt);
+void deinit();
 
 bool get_size(size_t& rows, size_t& columns);
 

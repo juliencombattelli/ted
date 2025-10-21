@@ -98,24 +98,38 @@ static void enable_raw_mode()
     }
 }
 
-static void deinit()
+void init(std::optional<Fds> fds)
 {
-    disable_raw_mode();
-    enter_main_screen_buffer();
-}
+    if (fds) {
+        state.stdin_fd = fds->in;
+        state.stdout_fd = fds->out;
+    } else {
+        // state.{stdin,stdout} are statically initialized
+        // just check they refer to a tty
+        if (!ted::os::isatty(state.stdin_fd)) {
+            ted::os::exit_err("stdin is not a tty");
+        }
+        if (!ted::os::isatty(state.stdout_fd)) {
+            ted::os::exit_err("stdout is not a tty");
+        }
+    }
 
-void init()
-{
     enter_alternate_screen_buffer();
     enable_raw_mode();
 
     os::at_exit(os::Ring::_1, deinit);
 }
 
+void deinit()
+{
+    disable_raw_mode();
+    enter_main_screen_buffer();
+}
+
 bool get_size(size_t& rows, size_t& columns)
 {
     winsize ws {};
-    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
+    if (ioctl(state.stdout_fd, TIOCGWINSZ, &ws) == -1 || ws.ws_col == 0) {
         return false;
     }
     rows = ws.ws_row;
@@ -125,7 +139,7 @@ bool get_size(size_t& rows, size_t& columns)
 
 bool read_key(uint8_t& byte)
 {
-    if (::read(STDIN_FILENO, &byte, 1) == EOF) {
+    if (::read(state.stdin_fd, &byte, 1) == EOF) {
         if (errno == EAGAIN) {
             return false; // timeout, nothing to read
         }
@@ -142,7 +156,7 @@ bool read_key(uint8_t& byte)
 void print_n(const void* buffer, size_t size)
 {
     // TODO handle error
-    (void)::write(STDOUT_FILENO, buffer, size);
+    (void)::write(state.stdout_fd, buffer, size);
 }
 
 void print_cstr(const char* str)
