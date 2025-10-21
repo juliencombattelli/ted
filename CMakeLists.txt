@@ -1,20 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 project(TED VERSION 0.1.0)
 
+option(TED_BUILD_TESTS "Enable building the tests" ON)
+option(TED_BUILD_KILO "Enable building the Kilo reference editor" ON)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_REQUIRED yes)
 set(CMAKE_CXX_EXTENSIONS no)
-
-include(FetchContent)
-
-FetchContent_Declare(
-    googletest
-    GIT_REPOSITORY  https://github.com/google/googletest.git
-    GIT_TAG         v1.17.0
-    GIT_SHALLOW     TRUE
-)
-
-FetchContent_MakeAvailable(googletest)
 
 find_package(ICU REQUIRED COMPONENTS uc)
 
@@ -56,9 +48,12 @@ add_executable(ted
 )
 target_link_libraries(ted PRIVATE libted)
 
-add_executable(utf8_test
-    src/utf8_test.cpp
-)
-target_link_libraries(utf8_test PRIVATE libted GTest::gtest)
+if(TED_BUILD_TESTS)
+    enable_testing()
+    include(GoogleTest)
+    add_subdirectory(test)
+endif()
 
-add_executable(kilo examples/kilo.c)
+if(TED_BUILD_KILO)
+    add_executable(kilo examples/kilo.c)
+endif()
