@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <ted/editor.hpp>
 #include <ted/key.hpp>
 #include <ted/os.hpp>
@@ -246,11 +247,67 @@ static void draw_lines()
                 draw_welcome_message(welcome_message_line++);
             }
         }
-        // Print last line without EOL
-        if (row < editor::get_screen_rows() - 1) {
-            editor::screen_buffer_append("\r\n");
-        }
+        editor::screen_buffer_append("\r\n");
     }
+}
+
+static std::string status_line;
+static std::string filename_buffer;
+
+static void draw_status_line()
+{
+    status_line.clear();
+    status_line.resize(editor::get_screen_cols());
+
+    ted::editor::File& file = *editor::state.viewed_file;
+
+    char segment_right[256] {};
+    std::format_to_n(
+        segment_right,
+        std::size(segment_right) - 1,
+        "{}:{}  {}% ",
+        editor::get_cursor_row() + 1,
+        editor::get_cursor_col() + 1,
+        (editor::get_cursor_row() + 1) * 100 / file.lines.size());
+
+    ssize_t filename_max_len
+        = editor::get_screen_cols() - std::strlen(segment_right) - 1;
+
+    filename_buffer.resize(filename_max_len);
+    std::format_to_n(
+        filename_buffer.begin(),
+        filename_buffer.length() - 1,
+        "{}",
+        std::string_view(file.name).substr(
+            std::max<ssize_t>(
+                0,
+                (ssize_t)file.name.size() - filename_max_len)));
+    if (filename_buffer.length() > filename_max_len) {
+        filename_buffer[0] = '<';
+    }
+
+    char segment_left[256] {};
+    std::format_to_n(
+        segment_left,
+        sizeof(segment_left) - 1,
+        " {} - {}L",
+        filename_buffer,
+        file.lines.size());
+
+    size_t pad = status_line.size() - std::strlen(segment_left)
+        - std::strlen(segment_right);
+    std::format_to_n(
+        status_line.begin(),
+        status_line.size(),
+        "{}{:{}}{}",
+        segment_left,
+        "",
+        pad,
+        segment_right);
+
+    editor::screen_buffer_append("\x1b[7m");
+    editor::screen_buffer_append_n(status_line.data(), status_line.length());
+    editor::screen_buffer_append("\x1b[m\r\n");
 }
 
 static void write_screen_buffer()
@@ -271,6 +328,7 @@ static void refresh_screen()
     term::cursor_home();
 
     draw_lines();
+    draw_status_line();
 
     term::cursor_move(
         editor::get_cursor_row() - editor::state.viewport_offset.row,
