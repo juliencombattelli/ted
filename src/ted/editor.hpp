@@ -17,6 +17,9 @@ namespace ted::editor {
 using KeyHandler = void(void* userdata);
 using KeyMap = std::array<KeyHandler*, std::to_underlying(Key::Count)>;
 
+// Result returned by column substring operations
+//
+// Example:
 // col_pos = 7
 // col_n = 13
 // col_pos + col_n ──────────────────────────┐
@@ -27,6 +30,10 @@ using KeyMap = std::array<KeyHandler*, std::to_underlying(Key::Count)>;
 // offset_from_start_char = 2 ─┴┘││        │ │
 // cut_at_start = 2 ─────────────┴┘        │ │
 // cut_at_end = 3 ─────────────────────────┴─┘
+//
+// offset_to_last_char is not stored as it is not necessary for now
+//
+// The use-case above is used as a reference test in test/utf8_test.cpp
 struct SubstrResult {
     std::string_view substr;
     // column offset from beginning of char if start is cut
