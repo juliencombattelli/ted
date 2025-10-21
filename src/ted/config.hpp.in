@@ -1,0 +1,24 @@
+#ifndef TED_CONFIG_HPP_
+#define TED_CONFIG_HPP_
+
+#include <cstdlib>
+#include <cstring>
+
+namespace ted {
+
+#define TED_SOURCE_DIR "@TED_SOURCE_DIR@/"
+
+// clang-format off
+#define TED_VERSION_MAJOR @TED_VERSION_MAJOR@
+#define TED_VERSION_MINOR @TED_VERSION_MINOR@
+#define TED_VERSION_PATCH @TED_VERSION_PATCH@
+// clang-format on
+
+#define TED_VERSION                                                            \
+    TED_STRINGIFY_VALUE_OF(TED_VERSION_MAJOR)                                  \
+    "." TED_STRINGIFY_VALUE_OF(TED_VERSION_MINOR) "." TED_STRINGIFY_VALUE_OF(  \
+        TED_VERSION_PATCH)
+
+} // namespace ted
+
+#endif // TED_CONFIG_HPP_

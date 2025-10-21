@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(ted)
+project(TED VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_REQUIRED yes)
@@ -26,6 +26,8 @@ else()
     message(FATAL_ERROR "Unsupported platform")
 endif()
 
+configure_file(src/ted/config.hpp.in include/ted/config.hpp @ONLY)
+
 add_library(libted STATIC
     src/ted/editor.cpp
     src/ted/os.cpp
@@ -36,7 +38,7 @@ add_library(libted STATIC
     src/ted/platform/${PLATFORM_DIR}/term.cpp
 )
 set_target_properties(libted PROPERTIES PREFIX "")
-target_include_directories(libted PUBLIC src)
+target_include_directories(libted PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/include")
 target_link_libraries(libted PRIVATE ICU::uc)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     target_compile_options(libted PUBLIC

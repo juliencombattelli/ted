@@ -1,4 +1,4 @@
-#include <source_location>
+#include <ted/config.hpp>
 #include <ted/os.hpp>
 #include <ted/term.hpp>
 
@@ -6,6 +6,8 @@
 #include <atomic>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
+#include <source_location>
 #include <utility>
 #include <vector>
 
@@ -94,12 +96,23 @@ void print_source_location_at_exit(bool do_print_source_location)
     must_print_source_location = do_print_source_location;
 }
 
-static void print_source_location(std::source_location source_location)
+static const char* relative_file_name(
+    const std::source_location& source_location)
+{
+    size_t project_root_len = std::strlen(TED_SOURCE_DIR);
+    const char* file_name = source_location.file_name();
+    if (std::strncmp(file_name, TED_SOURCE_DIR, project_root_len)) {
+        return file_name;
+    }
+    return file_name + project_root_len;
+}
+
+static void print_source_location(const std::source_location& source_location)
 {
     (void)std::fprintf(
         stderr,
         "%s:%u: ",
-        source_location.file_name(),
+        relative_file_name(source_location),
         source_location.line());
 }
 

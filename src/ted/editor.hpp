@@ -1,6 +1,7 @@
 #ifndef TED_EDITOR_HPP_
 #define TED_EDITOR_HPP_
 
+#include <ted/config.hpp>
 #include <ted/key.hpp>
 #include <ted/utf8.hpp>
 #include <ted/utils.hpp>
@@ -10,14 +11,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#define TED_VERSION_MAJOR 0
-#define TED_VERSION_MINOR 1
-#define TED_VERSION_PATCH 0
-#define TED_VERSION                                                            \
-    TED_STRINGIFY_VALUE_OF(TED_VERSION_MAJOR)                                  \
-    "." TED_STRINGIFY_VALUE_OF(TED_VERSION_MINOR) "." TED_STRINGIFY_VALUE_OF(  \
-        TED_VERSION_PATCH)
 
 namespace ted::editor {
 
