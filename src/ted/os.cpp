@@ -4,7 +4,6 @@
 
 #include <array>
 #include <atomic>
-#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <utility>
@@ -127,6 +126,22 @@ void exit_err(const char* msg, std::source_location srcloc)
         std::perror(exit_message);
     });
     std::exit(EXIT_FAILURE);
+}
+
+void assert_impl_(
+    bool condition,
+    const char* condition_str,
+    const char* msg,
+    std::source_location srcloc)
+{
+    if (!condition) {
+        print_source_location(srcloc);
+        (void)std::fprintf(stderr, "Assertion failed: '%s'\n", condition_str);
+        if (msg) {
+            (void)std::fprintf(stderr, "> %s\n", msg);
+        }
+        std::exit(EXIT_FAILURE);
+    }
 }
 
 } // namespace ted::os

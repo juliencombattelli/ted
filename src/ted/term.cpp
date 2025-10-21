@@ -1,9 +1,9 @@
 #include <ted/editor.hpp>
+#include <ted/os.hpp>
 #include <ted/term.hpp>
 
 #include <array>
 #include <bit>
-#include <cassert>
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
@@ -33,7 +33,7 @@ void cursor_move(size_t row, size_t col)
 
     char code[code_buf_size] {};
     int n = snprintf(code, code_buf_size, "\e[%zu;%zuH", row + 1, col + 1);
-    assert(min_code_len <= n && n <= code_buf_size);
+    TED_ASSERT(min_code_len <= n && n <= code_buf_size);
 
     send_code(code);
 }
@@ -60,7 +60,7 @@ void erase_line(EraseLineMode mode)
         "\e[1K",
         "\e[2K",
     };
-    assert(std::to_underlying(mode) < codes.size());
+    TED_ASSERT(std::to_underlying(mode) < codes.size());
     const char* code = codes[std::to_underlying(mode)];
     send_code(code);
 }
@@ -77,7 +77,7 @@ void clear(ClearMode mode)
         "\e[1J",
         "\e[2J",
     };
-    assert(std::to_underlying(mode) < codes.size());
+    TED_ASSERT(std::to_underlying(mode) < codes.size());
     const char* code = codes[std::to_underlying(mode)];
     send_code(code);
 }

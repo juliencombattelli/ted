@@ -6,7 +6,6 @@
 #include <ted/utf8.hpp>
 
 #include <algorithm>
-#include <cassert>
 #include <cctype>
 #include <climits>
 #include <format>

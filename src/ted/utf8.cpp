@@ -7,7 +7,6 @@
 #include <unicode/utext.h>
 #include <unicode/utypes.h>
 
-#include <cassert>
 #include <cstddef>
 #include <limits>
 #include <string_view>
@@ -19,7 +18,7 @@ void init()
 {
     UErrorCode status = U_ZERO_ERROR;
     u_init(&status);
-    assert(U_SUCCESS(status));
+    TED_ASSERT(U_SUCCESS(status));
 }
 
 void deinit()
@@ -87,7 +86,7 @@ CharIterator& CharIterator::operator++()
 
 bool CharIterator::operator==(CharIterator other) const
 {
-    assert(state == other.state);
+    TED_ASSERT(state == other.state);
     return current_char.next_byte == other.current_char.next_byte;
 }
 
@@ -128,19 +127,19 @@ Chars chars(std::string_view s, IteratorState* shared_state)
 {
     Chars chars { .state = shared_state, .str = s };
 
-    assert(shared_state != nullptr);
+    TED_ASSERT(shared_state != nullptr);
 
     UText* ut = &shared_state->text;
     UBreakIterator* bi = shared_state->break_iterator;
 
     UErrorCode status = U_ZERO_ERROR;
-    assert(s.length() <= std::numeric_limits<int64_t>::max());
+    TED_ASSERT(s.length() <= std::numeric_limits<int64_t>::max());
     utext_openUTF8(ut, s.data(), static_cast<int64_t>(s.length()), &status);
-    assert(U_SUCCESS(status));
+    TED_ASSERT(U_SUCCESS(status));
 
     status = U_ZERO_ERROR;
     ubrk_setUText(bi, ut, &status);
-    assert(U_SUCCESS(status));
+    TED_ASSERT(U_SUCCESS(status));
 
     return chars;
 }

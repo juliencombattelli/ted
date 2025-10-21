@@ -5,7 +5,6 @@
 #include <ted/utf8.hpp>
 
 #include <algorithm>
-#include <cassert>
 #include <fstream>
 #include <functional>
 #include <string>
@@ -225,7 +224,7 @@ void screen_buffer_append_char(char c)
 }
 void screen_buffer_append(const char* s)
 {
-    assert(s != nullptr);
+    TED_ASSERT(s != nullptr);
     while (*s) {
         screen_buffer_append_char(*s++);
     }
@@ -263,7 +262,7 @@ void scroll()
 
 static Line& get_cursor_text_line()
 {
-    assert(state.cursor_coord.row < state.viewed_file->lines.size());
+    TED_ASSERT(state.cursor_coord.row < state.viewed_file->lines.size());
     return state.viewed_file->lines[state.cursor_coord.row];
 }
 

@@ -58,6 +58,16 @@ void exit_err_format(utils::Fmt fmt, Args&&... args)
 // Prepend the source location before the exit message
 void print_source_location_at_exit(bool do_print_source_location);
 
+// Assert that the passed conditional is true, otherwise abort with a message
+#define TED_ASSERT(condition, ...)                                             \
+    ted::os::assert_impl_((condition), #condition __VA_OPT__(, ) __VA_ARGS__)
+
+void assert_impl_(
+    bool condition,
+    const char* condition_str,
+    const char* msg = nullptr,
+    std::source_location srcloc = std::source_location::current());
+
 [[nodiscard]]
 bool isatty(int fd);
 
