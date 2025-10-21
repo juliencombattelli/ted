@@ -55,6 +55,7 @@ SubstrResult rendered_column_substr(
 using Line = std::string;
 
 struct File {
+    std::string name;
     std::vector<Line> lines;
 };
 

@@ -246,11 +246,84 @@ static void draw_lines()
                 draw_welcome_message(welcome_message_line++);
             }
         }
-        // Print last line without EOL
-        if (row < editor::get_screen_rows() - 1) {
-            editor::screen_buffer_append("\r\n");
-        }
+        editor::screen_buffer_append("\r\n");
     }
+}
+
+struct StatusLine {
+    StatusLine()
+    {
+        buffer.reserve(1024);
+        segment_filename.reserve(1024);
+        segment_total_line.reserve(1024);
+        segment_cursor_coord.reserve(1024);
+    }
+    std::string buffer;
+    std::string segment_filename;
+    std::string segment_total_line;
+    std::string segment_cursor_coord;
+};
+
+static void draw_status_line()
+{
+    static StatusLine status_line;
+
+    status_line.buffer.clear();
+    status_line.buffer.resize(editor::get_screen_cols());
+    status_line.segment_filename.clear();
+    status_line.segment_total_line.clear();
+    status_line.segment_cursor_coord.clear();
+
+    ted::editor::File& file = *editor::state.viewed_file;
+
+    std::format_to(
+        std::back_inserter(status_line.segment_cursor_coord),
+        "| {}:{} | {}%",
+        editor::get_cursor_row() + 1,
+        editor::get_cursor_col() + 1,
+        (editor::get_cursor_row() + 1) * 100 / file.lines.size());
+
+    std::format_to(
+        std::back_inserter(status_line.segment_total_line),
+        " {}L |",
+        file.lines.size());
+
+    size_t filename_max_len = editor::get_screen_cols()
+        - status_line.segment_cursor_coord.length()
+        - status_line.segment_total_line.length();
+
+    size_t starting_pos_filename = 0;
+    if (file.name.length() + 4 > filename_max_len) {
+        starting_pos_filename = file.name.length() + 4 - filename_max_len;
+    }
+    std::format_to(
+        std::back_inserter(status_line.segment_filename),
+        "{} |",
+        std::string_view(file.name).substr(starting_pos_filename));
+    if (file.name.length() + 4 > filename_max_len) {
+        status_line.segment_filename[0] = '<';
+    }
+
+    size_t pad = status_line.buffer.length()
+        - status_line.segment_filename.length()
+        - status_line.segment_total_line.length()
+        - status_line.segment_cursor_coord.length() - 2;
+
+    std::format_to_n(
+        status_line.buffer.data(),
+        status_line.buffer.size(),
+        " {}{}{:{}}{} ",
+        status_line.segment_filename,
+        status_line.segment_total_line,
+        "",
+        pad,
+        status_line.segment_cursor_coord);
+
+    editor::screen_buffer_append("\x1b[7m");
+    editor::screen_buffer_append_n(
+        status_line.buffer.data(),
+        status_line.buffer.length());
+    editor::screen_buffer_append("\x1b[m\r\n");
 }
 
 static void write_screen_buffer()
@@ -271,6 +344,7 @@ static void refresh_screen()
     term::cursor_home();
 
     draw_lines();
+    draw_status_line();
 
     term::cursor_move(
         editor::get_cursor_row() - editor::state.viewport_offset.row,

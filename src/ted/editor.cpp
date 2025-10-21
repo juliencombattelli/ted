@@ -388,7 +388,8 @@ static ScreenSize get_screen_size()
 
 void set_screen_rows(size_t rows)
 {
-    set_screen_size(ScreenSize { rows, get_screen_cols() });
+    // Keep room for the status bar
+    set_screen_size(ScreenSize { rows - 2, get_screen_cols() });
 }
 size_t get_screen_rows()
 {
@@ -449,11 +450,14 @@ KeyHandler* get_keymap(Key::Code keycode)
 void open_new_file()
 {
     state.viewed_file = &state.opened_files.emplace_back();
+    state.viewed_file->name = "[No Name]";
     state.viewed_file->lines.emplace_back("");
 }
 void open_file(const char* path)
 {
     state.viewed_file = &state.opened_files.emplace_back();
+
+    state.viewed_file->name = path;
 
     std::fstream file(path);
     if (!file.is_open()) {
