@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cctype>
 #include <climits>
+#include <concepts>
 #include <format>
 #include <string_view>
 
@@ -264,6 +265,16 @@ struct StatusLine {
     std::string segment_cursor_coord;
 };
 
+static constexpr size_t digit_count_base10(std::integral auto number)
+{
+    size_t digits = 0;
+    do {
+        number /= 10;
+        digits++;
+    } while (number != 0);
+    return digits;
+}
+
 static void draw_status_line()
 {
     static StatusLine status_line;
@@ -277,16 +288,20 @@ static void draw_status_line()
     ted::editor::File& file = *editor::state.viewed_file;
 
     std::format_to(
-        std::back_inserter(status_line.segment_cursor_coord),
-        "| {}:{} | {}%",
-        editor::get_cursor_row() + 1,
-        editor::get_cursor_col() + 1,
-        (editor::get_cursor_row() + 1) * 100 / file.lines.size());
-
-    std::format_to(
         std::back_inserter(status_line.segment_total_line),
         " {}L |",
         file.lines.size());
+    // minus 4 chars for ' ', 'L', ' ', '|'
+    size_t total_line_digit_count = status_line.segment_total_line.length() - 4;
+
+    std::format_to(
+        std::back_inserter(status_line.segment_cursor_coord),
+        "| {:{}}:{:<{}} | {:3}%",
+        editor::get_cursor_row() + 1,
+        total_line_digit_count,
+        editor::get_cursor_col() + 1,
+        digit_count_base10(file.longest_line_size),
+        (editor::get_cursor_row() + 1) * 100 / file.lines.size());
 
     size_t filename_max_len = editor::get_screen_cols()
         - status_line.segment_cursor_coord.length()
@@ -307,7 +322,8 @@ static void draw_status_line()
     size_t pad = status_line.buffer.length()
         - status_line.segment_filename.length()
         - status_line.segment_total_line.length()
-        - status_line.segment_cursor_coord.length() - 2;
+        - status_line.segment_cursor_coord.length()
+        - 2; // minus 2 for the two spaces at left and right
 
     std::format_to_n(
         status_line.buffer.data(),

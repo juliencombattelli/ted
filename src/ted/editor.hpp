@@ -57,6 +57,7 @@ using Line = std::string;
 struct File {
     std::string name;
     std::vector<Line> lines;
+    size_t longest_line_size;
 };
 
 struct ScreenSize {
