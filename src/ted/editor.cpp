@@ -1,7 +1,5 @@
 #include <ted/editor.hpp>
 #include <ted/os.hpp>
-#include <ted/term.hpp>
-#include <ted/tui.hpp>
 #include <ted/utf8.hpp>
 
 #include <algorithm>
