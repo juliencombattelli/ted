@@ -23,15 +23,15 @@ static Key::Code read_escape_sequence()
     uint8_t seq[3];
 
     if (!term::read_key(seq[0])) {
-        return Key::Code { '\e' };
+        return Key::Code::Escape;
     }
     if (!term::read_key(seq[1])) {
-        return Key::Code { '\e' };
+        return Key::Code::Escape;
     }
     if (seq[0] == '[') {
         if (seq[1] >= '0' && seq[1] <= '9') {
             if (!term::read_key(seq[2])) {
-                return Key::Code { '\e' };
+                return Key::Code::Escape;
             }
             if (seq[2] == '~') {
                 switch (seq[1]) {
@@ -79,7 +79,7 @@ static Key::Code read_escape_sequence()
             break;
         }
     }
-    return Key::Code { '\e' };
+    return Key::Code::Escape;
 }
 
 [[nodiscard]]
@@ -87,7 +87,7 @@ static Key::Code read_key()
 {
     uint8_t byte = 0;
     while (!term::read_key(byte)) { }
-    if (byte == '\e') {
+    if (byte == Key::Code::Escape) {
         return read_escape_sequence();
     }
     return Key::Code { byte };

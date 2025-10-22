@@ -11,6 +11,10 @@
 
 namespace ted::term {
 
+#define ESC "\x1B"
+#define CSI ESC "["
+#define OSC ESC "]"
+
 static void send_code(const char* code)
 {
     editor::screen_buffer_append(code);
@@ -32,7 +36,7 @@ void cursor_move(size_t row, size_t col)
         = std::bit_ceil(min_code_len + (size_t_digit_count * 2));
 
     char code[code_buf_size] {};
-    int n = snprintf(code, code_buf_size, "\e[%zu;%zuH", row + 1, col + 1);
+    int n = snprintf(code, code_buf_size, CSI "%zu;%zuH", row + 1, col + 1);
     TED_ASSERT(min_code_len <= n && n <= code_buf_size);
 
     send_code(code);
@@ -40,25 +44,25 @@ void cursor_move(size_t row, size_t col)
 
 void cursor_home()
 {
-    send_code("\e[H");
+    send_code(CSI "H");
 }
 
 void cursor_show()
 {
-    send_code("\e[?25h");
+    send_code(CSI "?25h");
 }
 
 void cursor_hide()
 {
-    send_code("\e[?25l");
+    send_code(CSI "?25l");
 }
 
 void erase_line(EraseLineMode mode)
 {
     static constexpr std::array codes {
-        "\e[0K",
-        "\e[1K",
-        "\e[2K",
+        CSI "0K",
+        CSI "1K",
+        CSI "2K",
     };
     TED_ASSERT(std::to_underlying(mode) < codes.size());
     const char* code = codes[std::to_underlying(mode)];
@@ -67,15 +71,15 @@ void erase_line(EraseLineMode mode)
 
 void erase_line()
 {
-    send_code("\e[K");
+    send_code(CSI "K");
 }
 
 void clear(ClearMode mode)
 {
     static constexpr std::array codes {
-        "\e[0J",
-        "\e[1J",
-        "\e[2J",
+        CSI "0J",
+        CSI "1J",
+        CSI "2J",
     };
     TED_ASSERT(std::to_underlying(mode) < codes.size());
     const char* code = codes[std::to_underlying(mode)];
@@ -84,19 +88,19 @@ void clear(ClearMode mode)
 
 void clear()
 {
-    send_code("\e[J");
+    send_code(CSI "J");
 }
 
 void enter_main_screen_buffer()
 {
-    static constexpr const char code[] = "\e[?1049l";
+    static constexpr const char code[] = CSI "?1049l";
     // Send code right away
     print_n(code, sizeof(code) - 1);
 }
 
 void enter_alternate_screen_buffer()
 {
-    static constexpr const char code[] = "\e[?1049h";
+    static constexpr const char code[] = CSI "?1049h";
     // Send code right away
     print_n(code, sizeof(code) - 1);
 }
