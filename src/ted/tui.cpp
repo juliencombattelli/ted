@@ -261,6 +261,18 @@ static constexpr size_t digit_count_base10(std::integral auto number)
     return digits;
 }
 
+#define SEGMENT_LEFT_A_FOREGROUND "24;24;24" // #181818
+#define SEGMENT_LEFT_A_BACKGROUND "106;153;85" // #6A9955
+
+#define SEGMENT_LEFT_C_FOREGROUND "187;187;187" // #BBBBBB
+#define SEGMENT_LEFT_C_BACKGROUND "24;24;24" // #181818
+
+#define SEGMENT_RIGHT_B_FOREGROUND "106;153;85" // #6A9955
+#define SEGMENT_RIGHT_B_BACKGROUND "48;48;48" // #303030
+
+#define SEGMENT_RIGHT_A_FOREGROUND "24;24;24" // #181818
+#define SEGMENT_RIGHT_A_BACKGROUND "106;153;85" // #6A9955
+
 struct StatusLine {
     static constexpr inline size_t initial_capacity = 1024;
 
@@ -279,11 +291,14 @@ struct StatusLine {
     std::string segment_cursor_coord;
     std::string segment_cursor_row_percent;
 
-    std::string_view separator_left = "";
+    // std::string_view separator_left = ""; // hollow >
+    std::string_view separator_left = ""; // plain >
+
     // std::string_view separator_left = "|";
     size_t separator_left_cols;
 
-    std::string_view separator_right = "";
+    // std::string_view separator_right = ""; // hollow <
+    std::string_view separator_right = ""; // plain <
     // std::string_view separator_right = "|";
     size_t separator_right_cols;
 
@@ -351,14 +366,32 @@ struct StatusLine {
             auto result = std::format_to_n(
                 buffer.data(),
                 buffer.size(),
-                " {}{}{:{}}{}{}{}{} ",
+                "\x1B[38;2;{};48;2;{}m {}\x1B[38;2;{};48;2;{}m{}"
+                "\x1B[38;2;{};48;2;{}m{:{}}"
+                "\x1B[38;2;{};48;2;{}m{}\x1B[38;2;{};48;2;{}m{}"
+                "\x1B[38;2;{};48;2;{}m{}\x1B[38;2;{};48;2;{}m{} "
+                "\x1B[0m",
+                SEGMENT_LEFT_A_FOREGROUND,
+                SEGMENT_LEFT_A_BACKGROUND,
                 segment_filename,
+                SEGMENT_LEFT_A_BACKGROUND,
+                SEGMENT_LEFT_C_BACKGROUND,
                 separator_left,
+                SEGMENT_LEFT_C_FOREGROUND,
+                SEGMENT_LEFT_C_BACKGROUND,
                 "",
                 pad,
+                SEGMENT_RIGHT_B_BACKGROUND,
+                SEGMENT_LEFT_C_BACKGROUND,
                 separator_right,
+                SEGMENT_RIGHT_B_FOREGROUND,
+                SEGMENT_RIGHT_B_BACKGROUND,
                 segment_cursor_coord,
+                SEGMENT_RIGHT_A_BACKGROUND,
+                SEGMENT_RIGHT_B_BACKGROUND,
                 separator_right,
+                SEGMENT_RIGHT_A_FOREGROUND,
+                SEGMENT_RIGHT_A_BACKGROUND,
                 segment_cursor_row_percent);
             return result.size;
         }
@@ -439,9 +472,9 @@ static void draw_status_line()
     ssize_t status_line_len = status_line.format_line();
     TED_ASSERT(status_line_len > 0);
 
-    editor::screen_buffer_append("\x1b[7m");
+    // editor::screen_buffer_append("\x1b[7m");
     editor::screen_buffer_append_n(status_line.buffer.data(), status_line_len);
-    editor::screen_buffer_append("\x1b[m\r\n");
+    // editor::screen_buffer_append("\x1b[m\r\n");
 }
 
 static void write_screen_buffer()
