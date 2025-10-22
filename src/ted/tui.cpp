@@ -251,20 +251,6 @@ static void draw_lines()
     }
 }
 
-struct StatusLine {
-    StatusLine()
-    {
-        buffer.reserve(1024);
-        segment_filename.reserve(1024);
-        segment_total_line.reserve(1024);
-        segment_cursor_coord.reserve(1024);
-    }
-    std::string buffer;
-    std::string segment_filename;
-    std::string segment_total_line;
-    std::string segment_cursor_coord;
-};
-
 static constexpr size_t digit_count_base10(std::integral auto number)
 {
     size_t digits = 0;
@@ -275,70 +261,186 @@ static constexpr size_t digit_count_base10(std::integral auto number)
     return digits;
 }
 
+struct StatusLine {
+    static constexpr inline size_t initial_capacity = 1024;
+
+    StatusLine()
+    {
+        buffer.reserve(initial_capacity);
+        segment_filename.reserve(initial_capacity);
+        segment_cursor_coord.reserve(initial_capacity);
+        segment_cursor_row_percent.reserve(initial_capacity);
+
+        separator_left_cols = editor::column_count(separator_left);
+        separator_right_cols = editor::column_count(separator_right);
+    }
+    std::string buffer;
+    std::string segment_filename;
+    std::string segment_cursor_coord;
+    std::string segment_cursor_row_percent;
+
+    std::string_view separator_left = "";
+    // std::string_view separator_left = "|";
+    size_t separator_left_cols;
+
+    std::string_view separator_right = "";
+    // std::string_view separator_right = "|";
+    size_t separator_right_cols;
+
+    void clear()
+    {
+        buffer.clear();
+        buffer.resize(initial_capacity, ' ');
+        segment_filename.clear();
+        segment_cursor_coord.clear();
+        segment_cursor_row_percent.clear();
+    }
+
+    void format_segment_cursor_row_percent()
+    {
+        ted::editor::File& file = *editor::state.viewed_file;
+
+        std::format_to(
+            std::back_inserter(segment_cursor_row_percent),
+            "{:3}%",
+            (editor::get_cursor_row() + 1) * 100 / file.lines.size());
+    }
+
+    void format_segment_cursor_coord()
+    {
+        ted::editor::File& file = *editor::state.viewed_file;
+
+        std::format_to(
+            std::back_inserter(segment_cursor_coord),
+            "{:>{}}"
+            ":"
+            "{:<{}}",
+            editor::get_cursor_row() + 1,
+            digit_count_base10(file.lines.size()),
+            editor::get_cursor_col() + 1,
+            digit_count_base10(file.longest_line_size));
+    }
+
+    void format_segment_filename()
+    {
+        ted::editor::File& file = *editor::state.viewed_file;
+
+        std::format_to(std::back_inserter(segment_filename), "{}", file.name);
+    }
+
+    ssize_t format_line()
+    {
+        format_segment_cursor_row_percent();
+        size_t segment_cursor_row_percent_cols
+            = editor::column_count(segment_cursor_row_percent);
+
+        format_segment_cursor_coord();
+        size_t segment_cursor_coord_cols
+            = editor::column_count(segment_cursor_coord);
+
+        format_segment_filename();
+        size_t segment_filename_cols = editor::column_count(segment_filename);
+
+        // Full display
+        size_t total_cols = segment_filename_cols + separator_left_cols
+            + separator_right_cols + segment_cursor_coord_cols
+            + separator_right_cols + segment_cursor_row_percent_cols
+            + 2; // plus 2 for the two spaces at left and right
+        if (editor::get_screen_cols() >= total_cols) {
+            size_t pad = editor::get_screen_cols() - total_cols;
+            auto result = std::format_to_n(
+                buffer.data(),
+                buffer.size(),
+                " {}{}{:{}}{}{}{}{} ",
+                segment_filename,
+                separator_left,
+                "",
+                pad,
+                separator_right,
+                segment_cursor_coord,
+                separator_right,
+                segment_cursor_row_percent);
+            return result.size;
+        }
+
+        // Reduced display, partial filename
+        size_t no_filename_total_cols = total_cols - segment_filename_cols;
+        if (editor::get_screen_cols() >= no_filename_total_cols) {
+            size_t filename_cols
+                = editor::get_screen_cols() - no_filename_total_cols;
+            size_t filename_start_col = segment_filename_cols - filename_cols;
+            std::string_view partial_segment_filename = editor::column_substr(
+                                                            segment_filename,
+                                                            filename_start_col,
+                                                            filename_cols)
+                                                            .substr;
+            segment_filename[filename_start_col] = '<';
+            auto result = std::format_to_n(
+                buffer.data(),
+                buffer.size(),
+                " {}{}{}{}{}{} ",
+                partial_segment_filename,
+                separator_left,
+                separator_right,
+                segment_cursor_coord,
+                separator_right,
+                segment_cursor_row_percent);
+            return result.size;
+        }
+
+        // Reduced display, remove file name
+        total_cols -= (segment_filename_cols + separator_left_cols);
+        if (editor::get_screen_cols() >= total_cols) {
+            size_t pad = editor::get_screen_cols() - total_cols;
+            auto result = std::format_to_n(
+                buffer.data(),
+                buffer.size(),
+                " {:{}}{}{}{}{} ",
+                "",
+                pad,
+                separator_right,
+                segment_cursor_coord,
+                separator_right,
+                segment_cursor_row_percent);
+            return result.size;
+        }
+
+        // Reduced display, remove cursor coordinates
+        total_cols -= (separator_right_cols + segment_cursor_coord_cols);
+        if (editor::get_screen_cols() >= total_cols) {
+            size_t pad = editor::get_screen_cols() - total_cols;
+            auto result = std::format_to_n(
+                buffer.data(),
+                buffer.size(),
+                " {:{}}{}{} ",
+                "",
+                pad,
+                separator_right,
+                segment_cursor_row_percent);
+            return result.size;
+        }
+
+        // Reduced display, remove everything and print only a blank line
+        auto result = std::format_to_n(
+            buffer.data(),
+            buffer.size(),
+            "{:{}}",
+            "",
+            editor::get_screen_cols());
+        return result.size;
+    }
+};
+
 static void draw_status_line()
 {
     static StatusLine status_line;
 
-    status_line.buffer.clear();
-    status_line.buffer.resize(editor::get_screen_cols());
-    status_line.segment_filename.clear();
-    status_line.segment_total_line.clear();
-    status_line.segment_cursor_coord.clear();
-
-    ted::editor::File& file = *editor::state.viewed_file;
-
-    std::format_to(
-        std::back_inserter(status_line.segment_total_line),
-        " {}L |",
-        file.lines.size());
-    // minus 4 chars for ' ', 'L', ' ', '|'
-    size_t total_line_digit_count = status_line.segment_total_line.length() - 4;
-
-    std::format_to(
-        std::back_inserter(status_line.segment_cursor_coord),
-        "| {:{}}:{:<{}} | {:3}%",
-        editor::get_cursor_row() + 1,
-        total_line_digit_count,
-        editor::get_cursor_col() + 1,
-        digit_count_base10(file.longest_line_size),
-        (editor::get_cursor_row() + 1) * 100 / file.lines.size());
-
-    size_t filename_max_len = editor::get_screen_cols()
-        - status_line.segment_cursor_coord.length()
-        - status_line.segment_total_line.length();
-
-    size_t starting_pos_filename = 0;
-    if (file.name.length() + 4 > filename_max_len) {
-        starting_pos_filename = file.name.length() + 4 - filename_max_len;
-    }
-    std::format_to(
-        std::back_inserter(status_line.segment_filename),
-        "{} |",
-        std::string_view(file.name).substr(starting_pos_filename));
-    if (file.name.length() + 4 > filename_max_len) {
-        status_line.segment_filename[0] = '<';
-    }
-
-    size_t pad = status_line.buffer.length()
-        - status_line.segment_filename.length()
-        - status_line.segment_total_line.length()
-        - status_line.segment_cursor_coord.length()
-        - 2; // minus 2 for the two spaces at left and right
-
-    std::format_to_n(
-        status_line.buffer.data(),
-        status_line.buffer.size(),
-        " {}{}{:{}}{} ",
-        status_line.segment_filename,
-        status_line.segment_total_line,
-        "",
-        pad,
-        status_line.segment_cursor_coord);
+    status_line.clear();
+    ssize_t status_line_len = status_line.format_line();
+    TED_ASSERT(status_line_len > 0);
 
     editor::screen_buffer_append("\x1b[7m");
-    editor::screen_buffer_append_n(
-        status_line.buffer.data(),
-        status_line.buffer.length());
+    editor::screen_buffer_append_n(status_line.buffer.data(), status_line_len);
     editor::screen_buffer_append("\x1b[m\r\n");
 }
 

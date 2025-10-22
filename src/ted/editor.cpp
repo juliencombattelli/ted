@@ -469,14 +469,12 @@ void open_file(const char* path)
         state.viewed_file->lines.emplace_back(std::move(line));
     }
 
-    state.viewed_file->longest_line_size
-        = std::max_element(
-              state.viewed_file->lines.begin(),
-              state.viewed_file->lines.end(),
-              [](const Line& s1, const Line& s2) {
-                  return s1.length() < s2.length();
-              })
-              ->length();
+    state.viewed_file->longest_line_size = column_count(*std::max_element(
+        state.viewed_file->lines.begin(),
+        state.viewed_file->lines.end(),
+        [](const Line& s1, const Line& s2) {
+            return s1.length() < s2.length();
+        }));
 }
 
 } // namespace ted::editor
