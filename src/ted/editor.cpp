@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <fstream>
 #include <functional>
+#include <limits>
 #include <string>
 #include <string_view>
 
@@ -379,10 +380,10 @@ static void set_screen_size(ScreenSize screen_size)
     // Reserve more than a screen to have spare space for wide chars (like tabs)
     state.screen_buffer.reserve(2 * screen_size.rows * screen_size.cols);
 }
-static ScreenSize get_screen_size()
-{
-    return state.screen_size;
-}
+// static ScreenSize get_screen_size()
+// {
+//     return state.screen_size;
+// }
 
 void set_screen_rows(size_t rows)
 {
@@ -411,7 +412,10 @@ static void update_full_tab_string()
         = column_substr(state.config.tab_str, 0, state.config.tab_width).substr;
     state.full_tab_string = tab_str;
     // Pad remaining columns with the last char in tab_str
-    uint8_t remaining = state.config.tab_width - column_count(tab_str);
+    size_t tab_col_count = column_count(tab_str);
+    // TODO emit error if tab_width > 255
+    TED_ASSERT(tab_col_count <= std::numeric_limits<uint8_t>::max());
+    uint8_t remaining = state.config.tab_width - (uint8_t)tab_col_count;
     state.full_tab_string.append(remaining, tab_str.back());
 }
 

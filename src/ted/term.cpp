@@ -13,7 +13,7 @@ namespace ted::term {
 
 #define ESC "\x1B"
 #define CSI ESC "["
-#define OSC ESC "]"
+// #define OSC ESC "]"
 
 static void send_code(const char* code)
 {
@@ -36,7 +36,10 @@ void cursor_move(size_t row, size_t col)
         = std::bit_ceil(min_code_len + (size_t_digit_count * 2));
 
     char code[code_buf_size] {};
-    int n = snprintf(code, code_buf_size, CSI "%zu;%zuH", row + 1, col + 1);
+    int result
+        = snprintf(code, code_buf_size, CSI "%zu;%zuH", row + 1, col + 1);
+    TED_ASSERT(result >= 0);
+    auto n = static_cast<size_t>(result);
     TED_ASSERT(min_code_len <= n && n <= code_buf_size);
 
     send_code(code);
