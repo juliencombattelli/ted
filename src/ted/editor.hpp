@@ -4,7 +4,7 @@
 #include <ted/config.hpp>
 #include <ted/key.hpp>
 #include <ted/utf8.hpp>
-#include <ted/utils.hpp>
+#include <ted/utils/utils.hpp>
 
 #include <array>
 #include <cstdlib>

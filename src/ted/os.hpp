@@ -1,7 +1,7 @@
 #ifndef TED_OS_HPP_
 #define TED_OS_HPP_
 
-#include <ted/utils.hpp>
+#include <ted/utils/fmt.hpp>
 
 #include <cstdio>
 #include <cstdlib>

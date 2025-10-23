@@ -1,12 +1,9 @@
-#ifndef TED_UTILS_HPP_
-#define TED_UTILS_HPP_
+#ifndef TED_UTILS_FMT_HPP_
+#define TED_UTILS_FMT_HPP_
 
 #include <format>
 #include <source_location>
 #include <string_view>
-
-#define TED_STRINGIFY_VALUE_OF(x) TED_STRINGIFY(x)
-#define TED_STRINGIFY(x) #x
 
 namespace ted::utils {
 
@@ -40,4 +37,4 @@ struct Fmt : public std::string_view {
 
 } // namespace ted::utils
 
-#endif // TED_UTILS_HPP_
+#endif // TED_UTILS_FMT_HPP_
