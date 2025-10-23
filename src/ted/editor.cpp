@@ -20,6 +20,22 @@ uint8_t rendered_char_column_width(const ted::utf8::Char& ch)
     return ch.column;
 }
 
+size_t rendered_col_to_line_col(Line& line, size_t rendered_col)
+{
+    ted::utf8::Chars chars
+        = ted::utf8::chars(line, state.utf8_chars_iterator_state);
+    size_t current_line_col = 0;
+    size_t current_rendered_col = 0;
+    for (ted::utf8::Char ch : chars) {
+        if (current_rendered_col >= rendered_col) {
+            break;
+        }
+        current_line_col += ch.column;
+        current_rendered_col += rendered_char_column_width(ch);
+    }
+    return current_line_col;
+}
+
 size_t column_count(std::string_view str)
 {
     size_t col_count = 0;
@@ -177,7 +193,8 @@ void dump_state()
         "it={}, "
         "scr={{r={},c={}}}, "
         "cur={{r={},c={}}}, "
-        "curcoladj={}, "
+        "curcr={}, "
+        "curcm={}, "
         "vwp={{r={},c={}}}\n",
         iteration++,
         state.screen_size.rows,
@@ -185,6 +202,7 @@ void dump_state()
         state.cursor_coord.row,
         state.cursor_coord.col,
         state.cursor_col_rendered,
+        state.cursor_col_memorized,
         state.viewport_offset.row,
         state.viewport_offset.col);
     state_dumper.file << state_dumper.buffer << std::flush;
@@ -275,7 +293,8 @@ static void fixup_cursor_col()
     SubstrResult substr
         = rendered_column_substr(cursor_line, state.cursor_col_rendered, 0);
     state.cursor_col_rendered -= substr.offset_from_start_char;
-    state.cursor_coord.col = state.cursor_col_rendered;
+    state.cursor_coord.col
+        = rendered_col_to_line_col(cursor_line, state.cursor_col_rendered);
 }
 
 void cursor_up()
@@ -328,16 +347,17 @@ void cursor_right()
 }
 void cursor_start_of_line()
 {
-    state.cursor_coord.col = 0;
-    state.cursor_col_rendered = state.cursor_coord.col;
-    state.cursor_col_memorized = state.cursor_coord.col;
+    state.cursor_col_rendered = 0;
+    state.cursor_col_memorized = state.cursor_col_rendered;
+    state.cursor_coord.col = state.cursor_col_rendered;
 }
 void cursor_end_of_line()
 {
     Line& cursor_line = get_cursor_text_line();
-    state.cursor_coord.col = rendered_column_count(cursor_line);
-    state.cursor_col_rendered = state.cursor_coord.col;
-    state.cursor_col_memorized = state.cursor_coord.col;
+    state.cursor_col_rendered = rendered_column_count(cursor_line);
+    state.cursor_col_memorized = state.cursor_col_rendered;
+    state.cursor_coord.col
+        = rendered_col_to_line_col(cursor_line, state.cursor_col_rendered);
 }
 
 /*void set_cursor_row(size_t row)

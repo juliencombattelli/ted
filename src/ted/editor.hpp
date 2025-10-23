@@ -17,6 +17,8 @@ namespace ted::editor {
 using KeyHandler = void(void* userdata);
 using KeyMap = std::array<KeyHandler*, std::to_underlying(Key::Count)>;
 
+using Line = std::string;
+
 // Result returned by column substring operations
 //
 // Example:
@@ -44,6 +46,7 @@ struct SubstrResult {
 };
 
 uint8_t rendered_char_column_width(const ted::utf8::Char& ch);
+size_t rendered_col_to_line_col(Line& line, size_t rendered_col);
 size_t column_count(std::string_view str);
 size_t rendered_column_count(std::string_view str);
 SubstrResult column_substr(std::string_view str, size_t col_pos, size_t col_n);
@@ -51,8 +54,6 @@ SubstrResult rendered_column_substr(
     std::string_view str,
     size_t col_pos,
     size_t col_n);
-
-using Line = std::string;
 
 struct File {
     std::string name;
