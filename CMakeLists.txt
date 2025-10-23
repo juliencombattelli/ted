@@ -1,12 +1,12 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.25)
 project(TED VERSION 0.1.0)
 
 option(TED_BUILD_TESTS "Enable building the tests" ON)
 option(TED_BUILD_KILO "Enable building the Kilo reference editor" ON)
 
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_REQUIRED yes)
-set(CMAKE_CXX_EXTENSIONS no)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(ICU REQUIRED COMPONENTS uc)
 
@@ -22,23 +22,12 @@ configure_file(src/ted/config.hpp.in include/ted/config.hpp @ONLY)
 
 include(cmake/FeatureTesting.cmake)
 
-if(NOT DEFINED ALL_FEATURES_FOUND)
-    message(CHECK_START "Checking for required C++ features")
-    list(APPEND CMAKE_MESSAGE_INDENT "  ")
-    unset(MISSING_FEATURES)
-
+macro(ted_required_features)
     # Some GCC versions support C++23 but not deducing this...
     have_cxx_feature(__cpp_explicit_this_parameter 202110L MISSING_FEATURES)
+endmacro()
 
-    list(POP_BACK CMAKE_MESSAGE_INDENT)
-    if(MISSING_FEATURES)
-        message(CHECK_FAIL "Failed")
-        message(FATAL_ERROR "Missing features: ${MISSING_FEATURES}")
-    else()
-        message(CHECK_PASS "Success")
-        set(ALL_FEATURES_FOUND TRUE CACHE INTERNAL "")
-    endif()
-endif()
+check_features(ted_required_features)
 
 add_library(libted STATIC
     src/ted/editor.cpp
