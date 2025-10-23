@@ -20,6 +20,26 @@ endif()
 
 configure_file(src/ted/config.hpp.in include/ted/config.hpp @ONLY)
 
+include(cmake/FeatureTesting.cmake)
+
+if(NOT DEFINED ALL_FEATURES_FOUND)
+    message(CHECK_START "Checking for required C++ features")
+    list(APPEND CMAKE_MESSAGE_INDENT "  ")
+    unset(MISSING_FEATURES)
+
+    # Some GCC versions support C++23 but not deducing this...
+    have_cxx_feature(__cpp_explicit_this_parameter 202110L MISSING_FEATURES)
+
+    list(POP_BACK CMAKE_MESSAGE_INDENT)
+    if(MISSING_FEATURES)
+        message(CHECK_FAIL "Failed")
+        message(FATAL_ERROR "Missing features: ${MISSING_FEATURES}")
+    else()
+        message(CHECK_PASS "Success")
+        set(ALL_FEATURES_FOUND TRUE CACHE INTERNAL "")
+    endif()
+endif()
+
 add_library(libted STATIC
     src/ted/editor.cpp
     src/ted/os.cpp
