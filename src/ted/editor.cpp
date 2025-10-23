@@ -454,7 +454,7 @@ void open_new_file()
     state.viewed_file = &state.opened_files.emplace_back();
     state.viewed_file->name = "[No Name]";
     state.viewed_file->lines.emplace_back("");
-    state.viewed_file->longest_line_size = 0;
+    state.viewed_file->longest_line_cols = 0;
 }
 void open_file(const char* path)
 {
@@ -471,7 +471,7 @@ void open_file(const char* path)
         state.viewed_file->lines.emplace_back(std::move(line));
     }
 
-    state.viewed_file->longest_line_size = column_count(*std::max_element(
+    state.viewed_file->longest_line_cols = column_count(*std::max_element(
         state.viewed_file->lines.begin(),
         state.viewed_file->lines.end(),
         [](const Line& s1, const Line& s2) {

@@ -333,7 +333,7 @@ struct StatusLine {
             editor::get_cursor_row() + 1,
             digit_count_base10(file.lines.size()),
             editor::get_cursor_col() + 1,
-            digit_count_base10(file.longest_line_size));
+            digit_count_base10(file.longest_line_cols));
     }
 
     void format_segment_filename()
