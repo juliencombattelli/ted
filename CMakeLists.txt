@@ -41,22 +41,42 @@ add_library(libted STATIC
 set_target_properties(libted PROPERTIES PREFIX "")
 target_include_directories(libted PUBLIC src "${CMAKE_CURRENT_BINARY_DIR}/include")
 target_link_libraries(libted PRIVATE ICU::uc)
-
-set(TED_WARNINGS_GNU_COMPATIBLE
-    -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Wcast-qual
-    -Wdouble-promotion -Wfloat-equal -Wformat=2 -Wformat-signedness
-    -Winit-self -Wmissing-declarations -Wswitch-default -Wswitch-enum
-    -Wundef -Wunused-macros -Wwrite-strings
-    # -Wpadded
-)
-set(TED_WARNINGS_GNU_EXCLUSIVE
-    -Wduplicated-branches -Wduplicated-cond -Wlogical-op
-)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-    target_compile_options(libted PUBLIC ${TED_WARNINGS_GNU_COMPATIBLE})
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        target_compile_options(libted PUBLIC ${TED_WARNINGS_GNU_EXCLUSIVE})
-    endif()
+    set(SANITIZERS address,leak,undefined,pointer-compare,pointer-subtract)
+    target_compile_options(libted PUBLIC
+        # Basic warning set
+        -Wall -Wextra -Wpedantic
+        # Additional misc warnings
+        -Wshadow -Winit-self -Wmissing-declarations -Wdate-time
+        # Cast related warnings
+        -Wcast-qual -Wold-style-cast
+        $<$<CXX_COMPILER_ID:GNU>:-Wuseless-cast>
+        # Conversion related warnings
+        -Wconversion -Wsign-conversion -Wfloat-conversion -Wenum-conversion
+        $<$<CXX_COMPILER_ID:GNU>:-Warith-conversion>
+        # Floating points related warnings
+        -Wdouble-promotion -Wfloat-equal
+        # Format strings related warnings
+        -Wformat=2 -Wformat-signedness
+        $<$<CXX_COMPILER_ID:GNU>:-Wformat-overflow=2 -Wformat-truncation=2>
+        # Switch related warnings
+        -Wswitch-default -Wswitch-enum
+        -Wimplicit-fallthrough$<$<CXX_COMPILER_ID:GNU>:=5>
+        # Preprocessor related warnings
+        -Wundef -Wunused-macros
+        # Performance degradation warnings
+        # -Wpadded
+        $<$<CXX_COMPILER_ID:GNU>:
+            -Wnrvo -Wduplicated-branches -Wduplicated-cond -Wlogical-op
+        >
+        # Hardening options
+        -fsanitize=${SANITIZERS}
+        -fsanitize-address-use-after-scope
+        -fno-omit-frame-pointer
+        -fstrict-aliasing
+        $<$<CXX_COMPILER_ID:GNU>:-fhardened -Wno-hardened>
+    )
+    target_link_options(libted PUBLIC -fsanitize=${SANITIZERS})
 endif()
 
 add_executable(ted
