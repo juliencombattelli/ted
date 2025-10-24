@@ -20,14 +20,13 @@ endif()
 
 configure_file(src/ted/config.hpp.in include/ted/config.hpp @ONLY)
 
-include(cmake/FeatureTesting.cmake)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 14)
+    message(FATAL_ERROR "GCC>=14 is required")
+endif()
 
-macro(ted_required_features)
-    # Some GCC versions support C++23 but not deducing this...
-    have_cxx_feature(__cpp_explicit_this_parameter 202110L MISSING_FEATURES)
-endmacro()
-
-check_features(ted_required_features)
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19)
+    message(FATAL_ERROR "Clang>=19 is required")
+endif()
 
 add_library(libted STATIC
     src/ted/editor.cpp

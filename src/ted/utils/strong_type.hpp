@@ -9,6 +9,13 @@
 // - https://github.com/foonathan/type_safe
 // - https://github.com/joboccara/NamedType
 
+#if __cplusplus < 202302L
+#error C++23 or greater is required
+#endif
+#if __cpp_explicit_this_parameter < 202110L
+#error C++ feature `deducing this` is required
+#endif
+
 #include <concepts>
 #include <limits>
 #include <utility>
