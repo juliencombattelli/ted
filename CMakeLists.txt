@@ -4,6 +4,17 @@ project(TED VERSION 0.1.0)
 option(TED_BUILD_TESTS "Enable building the tests" ON)
 option(TED_BUILD_KILO "Enable building the Kilo reference editor" ON)
 
+# Set a default build type if none was specified
+set(TED_DEFAULT_BUILD_TYPE "Release")
+if(EXISTS "${CMAKE_SOURCE_DIR}/.git")
+    set(TED_DEFAULT_BUILD_TYPE "RelWithDebInfo")
+endif()
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    message(STATUS "Setting build type to '${TED_DEFAULT_BUILD_TYPE}' as none was specified.")
+    set(CMAKE_BUILD_TYPE "${TED_DEFAULT_BUILD_TYPE}" CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
