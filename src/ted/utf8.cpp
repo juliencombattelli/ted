@@ -79,7 +79,8 @@ static uint8_t char_column(UText* ut, int64_t byte_index)
 CharIterator& CharIterator::operator++()
 {
     current_char.start_byte = current_char.next_byte;
-    current_char.next_byte = (size_t)ubrk_next(state->break_iterator);
+    current_char.next_byte
+        = static_cast<size_t>(ubrk_next(state->break_iterator));
     current_char.column = char_column(&state->text, current_char.start_byte);
     return *this;
 }
@@ -99,8 +100,8 @@ CharIterator Chars::begin()
 {
     Char current_char {
         .str = str,
-        .start_byte = (size_t)ubrk_first(state->break_iterator),
-        .next_byte = (size_t)ubrk_next(state->break_iterator),
+        .start_byte = static_cast<size_t>(ubrk_first(state->break_iterator)),
+        .next_byte = static_cast<size_t>(ubrk_next(state->break_iterator)),
         .column = char_column(&state->text, current_char.start_byte),
     };
     return {
@@ -113,8 +114,8 @@ CharIterator Chars::end()
 {
     Char current_char {
         .str = str,
-        .start_byte = (size_t)UBRK_DONE,
-        .next_byte = (size_t)UBRK_DONE,
+        .start_byte = static_cast<size_t>(UBRK_DONE),
+        .next_byte = static_cast<size_t>(UBRK_DONE),
         .column = 0,
     };
     return {

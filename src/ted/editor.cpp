@@ -435,7 +435,8 @@ static void update_full_tab_string()
     size_t tab_col_count = column_count(tab_str);
     // TODO emit error if tab_width > 255
     TED_ASSERT(tab_col_count <= std::numeric_limits<uint8_t>::max());
-    uint8_t remaining = state.config.tab_width - (uint8_t)tab_col_count;
+    uint8_t remaining
+        = state.config.tab_width - static_cast<uint8_t>(tab_col_count);
     state.full_tab_string.append(remaining, tab_str.back());
 }
 
