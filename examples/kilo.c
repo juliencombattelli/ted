@@ -132,8 +132,8 @@ char* editorPrompt(char* prompt, void (*callback)(char*, int));
 
 void die(const char* s)
 {
-    write(STDOUT_FILENO, "\x1b[2J", 4);
-    write(STDOUT_FILENO, "\x1b[H", 3);
+    if (write(STDOUT_FILENO, "\x1b[2J", 4)) { }
+    if (write(STDOUT_FILENO, "\x1b[H", 3)) { }
 
     perror(s);
     exit(1);
@@ -1017,7 +1017,7 @@ void editorRefreshScreen()
 
     abAppend(&ab, "\x1b[?25h", 6);
 
-    write(STDOUT_FILENO, ab.b, ab.len);
+    if (write(STDOUT_FILENO, ab.b, ab.len)) { }
     abFree(&ab);
 }
 
@@ -1139,8 +1139,8 @@ void editorProcessKeypress()
             quit_times--;
             return;
         }
-        write(STDOUT_FILENO, "\x1b[2J", 4);
-        write(STDOUT_FILENO, "\x1b[H", 3);
+        if (write(STDOUT_FILENO, "\x1b[2J", 4)) { }
+        if (write(STDOUT_FILENO, "\x1b[H", 3)) { }
         exit(0);
         break;
 

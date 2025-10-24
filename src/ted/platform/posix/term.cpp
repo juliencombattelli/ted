@@ -49,7 +49,7 @@ static void enable_raw_mode()
     }
 
     // Set state.terminal_resized to true whenever we get SIGWINCH
-    struct sigaction action {};
+    struct sigaction action { };
     action.sa_handler = [](int /*signal*/) { state.terminal_resized = true; };
     if (sigaction(SIGWINCH, &action, nullptr) != 0) {
         os::exit_err("sigaction(SIGWINCH) failed");
@@ -156,7 +156,7 @@ bool read_key(uint8_t& byte)
 void print_n(const void* buffer, size_t size)
 {
     // TODO handle error
-    (void)::write(state.stdout_fd, buffer, size);
+    if (write(state.stdout_fd, buffer, size)) { }
 }
 
 void print_cstr(const char* str)
