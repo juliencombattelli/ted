@@ -64,7 +64,9 @@ static Arguments parse_arguments(std::span<char*> args)
 
 int main(int argc, char* argv[])
 {
-    Arguments args = parse_arguments(std::span(argv, argc));
+    TED_ASSERT(argc > 0);
+    Arguments args
+        = parse_arguments(std::span(argv, static_cast<size_t>(argc)));
 
     if (args.debug) {
         ted::os::print_source_location_at_exit(true);

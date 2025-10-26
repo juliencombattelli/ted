@@ -10,7 +10,6 @@
 #include <cstddef>
 #include <limits>
 #include <string_view>
-#include <type_traits>
 
 namespace ted::utf8 {
 
@@ -33,12 +32,13 @@ struct IteratorState {
 
 IteratorState* create_chars_iterator_state()
 {
-    IteratorState* state = new IteratorState {};
+    // NOLINTNEXTLINE(*owning-memory*)
+    auto* state = new IteratorState {};
 
     UErrorCode status = U_ZERO_ERROR;
     utext_openUTF8(&state->text, "", -1, &status);
-    if (U_FAILURE(status)) {
-        delete state;
+    if (U_FAILURE(status)) { // NOLINT(*bool-conversion*)
+        delete state; // NOLINT(*owning-memory*)
         os::exit_err("utext_openUTF8() failed");
     }
 
@@ -58,17 +58,18 @@ void destroy_state(IteratorState* state)
 {
     ubrk_close(state->break_iterator);
     utext_close(&state->text);
-    delete state;
+    delete state; // NOLINT(*owning-memory*)
 }
 
-static bool is_wide_char_at(UText* ut, int64_t byte_index)
+static bool is_wide_char_at(UText* ut, size_t byte_index)
 {
-    UChar32 codepoint = utext_char32At(ut, byte_index);
+    TED_ASSERT(byte_index <= std::numeric_limits<int64_t>::max());
+    UChar32 codepoint = utext_char32At(ut, static_cast<int64_t>(byte_index));
     int width = u_getIntPropertyValue(codepoint, UCHAR_EAST_ASIAN_WIDTH);
     return (width == U_EA_FULLWIDTH) || (width == U_EA_WIDE);
 }
 
-static uint8_t char_column(UText* ut, int64_t byte_index)
+static uint8_t char_column(UText* ut, size_t byte_index)
 {
     if (is_wide_char_at(ut, byte_index)) {
         return 2;

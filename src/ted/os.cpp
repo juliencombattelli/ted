@@ -30,7 +30,7 @@ struct AtExitRegisterer {
         // Register the exit handler that will be called by the C++ runtime
         if (std::atexit(at_exit_handler) != 0) {
             (void)std::fputs("Cannot register atexit() handler", stderr);
-            std::exit(EXIT_FAILURE);
+            std::exit(EXIT_FAILURE); // NOLINT(*concurrency-mt-unsafe*)
         }
     }
 };
@@ -40,7 +40,9 @@ struct AtExitRegisterer {
 // Then define `at_exit_registerer` registering the std::atexit handler
 // This way it is guaranteed that on termination the handler will be called
 // before the `at_exit_registry` destructor
+// NOLINTNEXTLINE(*non-const-global*)
 static AtExit at_exit_registry;
+// NOLINTNEXTLINE(*non-const-global*)
 static AtExitRegisterer at_exit_registerer;
 
 static void at_exit_handler()
@@ -59,8 +61,9 @@ static void at_exit_handler()
 AtExit::AtExit()
 {
     // Preallocate a reasonable amount of handlers in each ring
+    static constexpr size_t initial_handler_per_ring = 8;
     for (auto& ring : at_exit_registry.exit_handlers) {
-        ring.reserve(8);
+        ring.reserve(initial_handler_per_ring);
     }
 }
 
@@ -70,16 +73,16 @@ void at_exit(Ring ring, void (*handler)())
         (void)std::fprintf(
             stderr,
             "AtExit::register_handler(): ring 0 is reserved\n");
-        std::exit(EXIT_FAILURE);
+        std::exit(EXIT_FAILURE); // NOLINT(*concurrency-mt-unsafe*)
     }
     if (ring >= Ring::Count) {
         (void)std::fprintf(
             stderr,
-            "AtExit::register_handler(): cannot register in ring %d, maximum "
+            "AtExit::register_handler(): cannot register in ring %zu, maximum "
             "is %zu\n",
             std::to_underlying(ring),
             AtExitRingCount - 1);
-        std::exit(EXIT_FAILURE);
+        std::exit(EXIT_FAILURE); // NOLINT(*concurrency-mt-unsafe*)
     }
     at_exit_registry.exit_handlers[std::to_underlying(ring)].push_back(handler);
 }
@@ -89,6 +92,7 @@ static void at_exit_ring0(void (*handler)())
     at_exit_registry.exit_handlers[0].push_back(handler);
 }
 
+// NOLINTNEXTLINE(*non-const-global*)
 static std::atomic_bool must_print_source_location = false;
 
 void print_source_location_at_exit(bool do_print_source_location)
@@ -101,7 +105,7 @@ static const char* relative_file_name(
 {
     size_t project_root_len = std::strlen(TED_SOURCE_DIR);
     const char* file_name = source_location.file_name();
-    if (std::strncmp(file_name, TED_SOURCE_DIR, project_root_len)) {
+    if (std::strncmp(file_name, TED_SOURCE_DIR, project_root_len) != 0) {
         return file_name;
     }
     return file_name + project_root_len;
@@ -125,7 +129,7 @@ void exit_ok(std::source_location srcloc)
             std::perror("");
         });
     }
-    std::exit(EXIT_SUCCESS);
+    std::exit(EXIT_SUCCESS); // NOLINT(*concurrency-mt-unsafe*)
 }
 
 void exit_err(const char* msg, std::source_location srcloc)
@@ -138,11 +142,12 @@ void exit_err(const char* msg, std::source_location srcloc)
         }
         std::perror(exit_message);
     });
-    std::exit(EXIT_FAILURE);
+    std::exit(EXIT_FAILURE); // NOLINT(*concurrency-mt-unsafe*)
 }
 
 void assert_impl_(
     bool condition,
+    // NOLINTNEXTLINE(*easily-swappable-param*)
     const char* condition_str,
     const char* msg,
     std::source_location srcloc)
@@ -150,10 +155,10 @@ void assert_impl_(
     if (!condition) {
         print_source_location(srcloc);
         (void)std::fprintf(stderr, "Assertion failed: '%s'\n", condition_str);
-        if (msg) {
+        if (msg != nullptr) {
             (void)std::fprintf(stderr, "> %s\n", msg);
         }
-        std::exit(EXIT_FAILURE);
+        std::exit(EXIT_FAILURE); // NOLINT(*concurrency-mt-unsafe*)
     }
 }
 

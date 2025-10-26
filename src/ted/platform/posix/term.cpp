@@ -22,7 +22,8 @@ static struct {
     int stdout_fd;
     termios stdout_initial_termios;
     bool terminal_resized;
-} state {
+} // NOLINTNEXTLINE(*non-const-global*)
+state {
     .stdin_fd = STDIN_FILENO,
     .stdin_flags = 0,
     .stdout_fd = STDOUT_FILENO,
@@ -126,6 +127,7 @@ void deinit()
     enter_main_screen_buffer();
 }
 
+// NOLINTNEXTLINE(*easily-swappable-param*)
 bool get_size(size_t& rows, size_t& columns)
 {
     winsize ws {};
@@ -156,7 +158,7 @@ bool read_key(uint8_t& byte)
 void print_n(const void* buffer, size_t size)
 {
     // TODO handle error
-    if (write(state.stdout_fd, buffer, size)) { }
+    if (write(state.stdout_fd, buffer, size) < 0) { }
 }
 
 void print_cstr(const char* str)

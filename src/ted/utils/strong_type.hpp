@@ -16,7 +16,6 @@
 #error C++ feature `deducing this` is required
 #endif
 
-#include <concepts>
 #include <limits>
 #include <utility>
 

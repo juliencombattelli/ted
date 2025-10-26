@@ -35,14 +35,14 @@ void cursor_move(size_t row, size_t col)
     static constexpr size_t code_buf_size
         = std::bit_ceil(min_code_len + (size_t_digit_count * 2));
 
-    char code[code_buf_size] {};
+    std::array<char, code_buf_size> code {};
     int result
-        = snprintf(code, code_buf_size, CSI "%zu;%zuH", row + 1, col + 1);
+        = snprintf(code.data(), code.size(), CSI "%zu;%zuH", row + 1, col + 1);
     TED_ASSERT(result >= 0);
     auto n = static_cast<size_t>(result);
     TED_ASSERT(min_code_len <= n && n <= code_buf_size);
 
-    send_code(code);
+    send_code(code.data());
 }
 
 void cursor_home()
@@ -96,6 +96,7 @@ void clear()
 
 void enter_main_screen_buffer()
 {
+    // NOLINTNEXTLINE(*avoid-c-arrays*)
     static constexpr const char code[] = CSI "?1049l";
     // Send code right away
     print_n(code, sizeof(code) - 1);
@@ -103,6 +104,7 @@ void enter_main_screen_buffer()
 
 void enter_alternate_screen_buffer()
 {
+    // NOLINTNEXTLINE(*avoid-c-arrays*)
     static constexpr const char code[] = CSI "?1049h";
     // Send code right away
     print_n(code, sizeof(code) - 1);

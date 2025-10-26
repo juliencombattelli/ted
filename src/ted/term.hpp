@@ -43,12 +43,6 @@ void clear();
 void enter_main_screen_buffer();
 void enter_alternate_screen_buffer();
 
-[[nodiscard, deprecated]]
-constexpr char key_ctrl(char key)
-{
-    return key & 0x1f;
-}
-
 [[nodiscard]]
 bool read_key(uint8_t& byte);
 

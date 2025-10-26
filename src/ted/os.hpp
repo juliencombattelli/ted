@@ -21,7 +21,7 @@ namespace ted::os {
 //
 // TODO if only ring 1 is needed in the other modules then consider keeping only
 // two rings (one reserved to os::exit* and one public) to simplify usage
-enum class Ring {
+enum class Ring : size_t {
     Reserved_0 = 0,
     _1,
     _2,
@@ -48,11 +48,10 @@ void exit_err(
 // status
 template<class... Args>
 [[noreturn]]
-void exit_err_format(utils::Fmt fmt, Args&&... args)
+void exit_err_format(utils::Fmt<Args...> fmt, Args&&... args)
 {
-    std::string msg
-        = std::format(fmt.get<Args...>(), std::forward<Args>(args)...);
-    exit_err(msg.c_str(), fmt.source_location);
+    std::string msg = std::format(fmt.format, std::forward<Args>(args)...);
+    exit_err(msg.c_str(), fmt.location);
 }
 
 // Prepend the source location before the exit message

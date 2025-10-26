@@ -10,6 +10,7 @@
 #include <climits>
 #include <concepts>
 #include <format>
+#include <iterator>
 #include <string_view>
 
 namespace ted::tui {
@@ -20,7 +21,7 @@ static bool keep_running = true;
 [[nodiscard]]
 static Key::Code read_escape_sequence()
 {
-    uint8_t seq[3];
+    std::array<uint8_t, 3> seq {};
 
     if (!term::read_key(seq[0])) {
         return Key::Code::Escape;
@@ -114,13 +115,13 @@ static void load_default_tui_keymap()
 
     editor::set_keymap(Key::Code::PageUp, [](void*) {
         size_t times = editor::get_screen_rows() - 1;
-        while (times--) {
+        while (times-- > 0) {
             editor::cursor_up();
         }
     });
     editor::set_keymap(Key::Code::PageDown, [](void*) {
         size_t times = editor::get_screen_rows() - 1;
-        while (times--) {
+        while (times-- > 0) {
             editor::cursor_down();
         }
     });
@@ -164,6 +165,7 @@ void init()
     load_default_tui_keymap();
 }
 
+// NOLINTNEXTLINE(*avoid-c-arrays*)
 static constexpr std::string_view welcome_message[] {
     "Ted v" TED_VERSION,
     "",
@@ -254,8 +256,8 @@ static void draw_lines()
 static constexpr size_t digit_count_base10(std::integral auto number)
 {
     size_t digits = 0;
-    do {
-        number /= 10;
+    do { // NOLINT(*do-while*)
+        number /= 10; //NOLINT(*magic-number*)
         digits++;
     } while (number != 0);
     return digits;
@@ -274,18 +276,20 @@ static constexpr size_t digit_count_base10(std::integral auto number)
 #define SEGMENT_RIGHT_A_BACKGROUND "106;153;85" // #6A9955
 
 struct StatusLine {
-    static constexpr inline size_t initial_capacity = 1024;
+    static constexpr inline size_t initial_segment_capacity = 1024;
+    static constexpr inline size_t initial_status_line_buffer_capacity = 10
+        * initial_segment_capacity; // Large enough to include all 6 segments
 
     StatusLine()
+        : separator_left_cols { editor::column_count(separator_left) }
+        , separator_right_cols { editor::column_count(separator_right) }
     {
-        buffer.reserve(initial_capacity);
-        segment_filename.reserve(initial_capacity);
-        segment_cursor_coord.reserve(initial_capacity);
-        segment_cursor_row_percent.reserve(initial_capacity);
-
-        separator_left_cols = editor::column_count(separator_left);
-        separator_right_cols = editor::column_count(separator_right);
+        buffer.reserve(initial_status_line_buffer_capacity);
+        segment_filename.reserve(initial_segment_capacity);
+        segment_cursor_coord.reserve(initial_segment_capacity);
+        segment_cursor_row_percent.reserve(initial_segment_capacity);
     }
+
     std::string buffer;
     std::string segment_filename;
     std::string segment_cursor_coord;
@@ -304,8 +308,8 @@ struct StatusLine {
 
     void clear()
     {
+        // TODO ensure that clear do not modify capacity
         buffer.clear();
-        buffer.resize(initial_capacity, ' ');
         segment_filename.clear();
         segment_cursor_coord.clear();
         segment_cursor_row_percent.clear();
@@ -318,6 +322,7 @@ struct StatusLine {
         std::format_to(
             std::back_inserter(segment_cursor_row_percent),
             "{:3}%",
+            // NOLINTNEXTLINE(*magic-number*)
             (editor::get_cursor_row() + 1) * 100 / file.lines.size());
     }
 
@@ -343,7 +348,7 @@ struct StatusLine {
         std::format_to(std::back_inserter(segment_filename), "{}", file.name);
     }
 
-    ssize_t format_line()
+    void format_line()
     {
         format_segment_cursor_row_percent();
         size_t segment_cursor_row_percent_cols
@@ -363,9 +368,8 @@ struct StatusLine {
             + 2; // plus 2 for the two spaces at left and right
         if (editor::get_screen_cols() >= total_cols) {
             size_t pad = editor::get_screen_cols() - total_cols;
-            auto result = std::format_to_n(
-                buffer.data(),
-                buffer.size(),
+            std::format_to(
+                std::back_inserter(buffer),
                 "\x1B[38;2;{};48;2;{}m {}\x1B[38;2;{};48;2;{}m{}"
                 "\x1B[38;2;{};48;2;{}m{:{}}"
                 "\x1B[38;2;{};48;2;{}m{}\x1B[38;2;{};48;2;{}m{}"
@@ -393,7 +397,7 @@ struct StatusLine {
                 SEGMENT_RIGHT_A_FOREGROUND,
                 SEGMENT_RIGHT_A_BACKGROUND,
                 segment_cursor_row_percent);
-            return result.size;
+            return;
         }
 
         // Reduced display, partial filename
@@ -408,9 +412,8 @@ struct StatusLine {
                                                             filename_cols)
                                                             .substr;
             segment_filename[filename_start_col] = '<';
-            auto result = std::format_to_n(
-                buffer.data(),
-                buffer.size(),
+            std::format_to(
+                std::back_inserter(buffer),
                 " {}{}{}{}{}{} ",
                 partial_segment_filename,
                 separator_left,
@@ -418,16 +421,15 @@ struct StatusLine {
                 segment_cursor_coord,
                 separator_right,
                 segment_cursor_row_percent);
-            return result.size;
+            return;
         }
 
         // Reduced display, remove file name
         total_cols -= (segment_filename_cols + separator_left_cols);
         if (editor::get_screen_cols() >= total_cols) {
             size_t pad = editor::get_screen_cols() - total_cols;
-            auto result = std::format_to_n(
-                buffer.data(),
-                buffer.size(),
+            std::format_to(
+                std::back_inserter(buffer),
                 " {:{}}{}{}{}{} ",
                 "",
                 pad,
@@ -435,32 +437,29 @@ struct StatusLine {
                 segment_cursor_coord,
                 separator_right,
                 segment_cursor_row_percent);
-            return result.size;
+            return;
         }
 
         // Reduced display, remove cursor coordinates
         total_cols -= (separator_right_cols + segment_cursor_coord_cols);
         if (editor::get_screen_cols() >= total_cols) {
             size_t pad = editor::get_screen_cols() - total_cols;
-            auto result = std::format_to_n(
-                buffer.data(),
-                buffer.size(),
+            std::format_to(
+                std::back_inserter(buffer),
                 " {:{}}{}{} ",
                 "",
                 pad,
                 separator_right,
                 segment_cursor_row_percent);
-            return result.size;
+            return;
         }
 
         // Reduced display, remove everything and print only a blank line
-        auto result = std::format_to_n(
-            buffer.data(),
-            buffer.size(),
+        std::format_to(
+            std::back_inserter(buffer),
             "{:{}}",
             "",
             editor::get_screen_cols());
-        return result.size;
     }
 };
 
@@ -469,11 +468,11 @@ static void draw_status_line()
     static StatusLine status_line;
 
     status_line.clear();
-    ssize_t status_line_len = status_line.format_line();
-    TED_ASSERT(status_line_len > 0);
-
+    status_line.format_line();
     // editor::screen_buffer_append("\x1b[7m");
-    editor::screen_buffer_append_n(status_line.buffer.data(), status_line_len);
+    editor::screen_buffer_append_n(
+        status_line.buffer.data(),
+        status_line.buffer.length());
     // editor::screen_buffer_append("\x1b[m\r\n");
 }
 

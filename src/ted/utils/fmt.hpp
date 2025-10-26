@@ -3,37 +3,33 @@
 
 #include <format>
 #include <source_location>
-#include <string_view>
 
 namespace ted::utils {
 
 // Wrap a std::format_string and a default constructed std::source_location to
 // get source location info for APIs using <format>
-struct Fmt : public std::string_view {
-    std::source_location source_location;
-
+// From https://stackoverflow.com/a/79155817/13195557
+namespace impl {
+template<class... Args>
+struct Fmt {
+    template<class T>
+        requires std::constructible_from<std::format_string<Args...>, T const&>
     // NOLINTNEXTLINE(*explicit*): intentionally allow implicit conversions
-    template<typename String>
-        requires std::constructible_from<std::string_view, String>
     consteval Fmt(
-        const String& string,
-        const std::source_location sourceLocation_
-        = std::source_location::current()) noexcept
-        : std::string_view(string)
-        , source_location(sourceLocation_)
+        T const& fmt,
+        std::source_location loc = std::source_location::current())
+        : format(fmt)
+        , location(loc)
     {
     }
 
-    template<std::formattable<char>... Args>
-    [[nodiscard]] constexpr const std::format_string<Args...>& get(
-        void) const noexcept
-    {
-        static_assert(
-            sizeof(std::string_view) == sizeof(std::format_string<Args...>),
-            "This implementation is not compatible with compiled STL");
-        return reinterpret_cast<const std::format_string<Args...>&>(*this);
-    }
+    std::format_string<Args...> format;
+    std::source_location location;
 };
+} // namespace impl
+
+template<typename... Args>
+using Fmt = impl::Fmt<std::type_identity_t<Args>...>;
 
 } // namespace ted::utils
 
