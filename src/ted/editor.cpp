@@ -215,9 +215,6 @@ void init()
 
     // Load default configuration
     state.config.eob_char = '~';
-    state.config.tab_width = 4;
-    state.config.tab_str = "› ";
-    // TODO crashing if config is not done above, to be investigated
     set_tab_width(4);
     set_tab_string("› ");
     // Keymap is not initialized here as the default mapping could change
@@ -427,6 +424,12 @@ static void update_full_tab_string()
     // Limit state.config.tab_str to state.config.tab_width columns
     // TODO emit warning if column_count(tab_str) > tab_width
     // TODO emit error if tab_str is empty or tab_width == 0
+    if (state.config.tab_str.empty()) {
+        return;
+    }
+    if (state.config.tab_width == 0) {
+        return;
+    }
     // TODO emit error if tab_width > 255
     std::string_view tab_str
         = column_substr(state.config.tab_str, 0, state.config.tab_width).substr;
