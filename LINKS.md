@@ -22,6 +22,7 @@ A collection of references I am regularly going to.
 ## Text buffer implementation
 
 - [VSCode Text Buffer Reimplementation](https://code.visualstudio.com/blogs/2018/03/23/text-buffer-reimplementation)
+- [Zed's Rope implementation](https://zed.dev/blog/zed-decoded-rope-sumtree)
 - [Text showdown: Gap Buffers vs Ropes](https://coredumped.dev/2023/08/09/text-showdown-gap-buffers-vs-ropes/)
 - [Wikipedia's Gap buffer](https://en.wikipedia.org/wiki/Gap_buffer)
 - [Wikipedia's Rope (data structure)](https://en.wikipedia.org/wiki/Rope_(data_structure))
